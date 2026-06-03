@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>キラキラ！ぽいんとハウス</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome -->
+  <!-- FontAwesome (可愛いアイコン用) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,261 +14,233 @@
   <link href="https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&family=M+PLUS+Rounded+1C:wght@500;700;900&display=swap" rel="stylesheet">
   
   <style>
+    :root {
+      --sat: env(safe-area-inset-top);
+      --sab: env(safe-area-inset-bottom);
+    }
     body {
       font-family: 'M PLUS Rounded 1C', sans-serif;
       -webkit-tap-highlight-color: transparent;
+      padding-top: var(--sat);
+      padding-bottom: var(--sab);
     }
     .logo-font {
       font-family: 'Cherry Bomb One', cursive;
     }
-    /* ぷっくり3Dボタンのスタイリング */
+    /* ぷっくり3Dボタン（人間工学に基づいたタップ感・コンパクトサイズ） */
     .btn-3d {
-      transition: all 0.08s ease;
-      box-shadow: 0 6px 0 var(--shadow-color);
+      position: relative;
+      transition: transform 0.05s ease, box-shadow 0.05s ease;
+      box-shadow: 0 4px 0 var(--shadow-color);
     }
     .btn-3d:active {
-      transform: translateY(4px);
-      box-shadow: 0 2px 0 var(--shadow-color);
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--shadow-color);
     }
-    /* ふわふわ浮かぶアニメーション */
+    /* もどすボタン用の小さな3D効果 */
+    .btn-undo {
+      transition: transform 0.05s ease, box-shadow 0.05s ease;
+      box-shadow: 0 3px 0 #cbd5e1;
+    }
+    .btn-undo:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #cbd5e1;
+    }
+    /* ふわふわ動く可愛いアニメーション */
     @keyframes float {
       0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-6px) rotate(1.5deg); }
+      50% { transform: translateY(-4px) rotate(1deg); }
     }
     .float-animation {
-      animation: float 4s ease-in-out infinite;
+      animation: float 3.5s ease-in-out infinite;
     }
-    /* タブ切り替えのアニメーション */
+    /* タブ切り替えのフェードイン */
     .tab-content {
       display: none;
     }
     .tab-content.active {
       display: flex;
       flex-direction: column;
-      height: 100%;
-      animation: fadeIn 0.2s ease-out;
+      animation: fadeIn 0.15s ease-out forwards;
     }
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(5px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    /* カスタムスクロールバー */
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #FFFbeb;
-      border-radius: 999px;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #Fde047;
-      border-radius: 999px;
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
     }
   </style>
 </head>
-<body class="bg-amber-50 text-slate-700 h-screen flex flex-col overflow-hidden select-none">
+<body class="bg-amber-50 text-slate-700 h-dvh flex flex-col justify-between overflow-hidden select-none">
 
-  <!-- パーティクル用キャンバス (画面最前面でクリック時に演出) -->
+  <!-- パーティクル用キャンバス（画面全体にきれいに散るように最前面に配置） -->
   <canvas id="particleCanvas" class="fixed top-0 left-0 w-full h-full pointer-events-none z-50"></canvas>
 
-  <!-- ヘッダー（コンパクトにまとめて1画面を広く使う） -->
-  <header class="bg-white border-b-[3px] border-yellow-300 p-2 shrink-0 z-30 shadow-sm">
-    <div class="max-w-4xl mx-auto flex justify-between items-center">
-      <!-- アプリロゴ -->
-      <div class="flex items-center space-x-2">
-        <div class="bg-yellow-400 p-1.5 rounded-xl shadow-inner text-white text-md float-animation">
-          <i class="fa-solid fa-star text-amber-100"></i>
+  <!-- ヘッダー (極限までコンパクト化して表示スペースを広く確保) -->
+  <header class="bg-white border-b-2 border-yellow-300 px-4 py-1.5 flex-shrink-0 shadow-sm">
+    <div class="max-w-md mx-auto flex justify-between items-center">
+      <!-- 可愛いロゴ -->
+      <div class="flex items-center space-x-1.5">
+        <div class="bg-yellow-400 w-6 h-6 rounded-lg flex items-center justify-center text-white shadow-inner text-xs float-animation">
+          <i class="fa-solid fa-star"></i>
         </div>
         <div>
-          <h1 class="logo-font text-xl md:text-2xl text-amber-500 tracking-wider">ぽいんとハウス</h1>
-          <p class="text-[9px] text-slate-400 font-bold tracking-tight">iPad mini & PC ぴったりサイズ！</p>
+          <h1 class="logo-font text-lg text-amber-500 tracking-wide leading-none">ぽいんとハウス</h1>
         </div>
       </div>
 
-      <!-- 右側：おうちコードと音設定 -->
-      <div class="flex items-center space-x-2">
-        <!-- 音量切り替え -->
-        <button id="soundToggleBtn" onclick="toggleSound()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center border border-slate-300 text-slate-500 hover:bg-slate-200 transition-colors">
-          <i id="soundIcon" class="fa-solid fa-volume-high text-amber-500 text-xs"></i>
+      <!-- 右側：設定 -->
+      <div class="flex items-center space-x-1.5">
+        <!-- 音切り替え -->
+        <button id="soundToggleBtn" onclick="toggleSound()" class="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center border border-slate-200 text-slate-400 hover:bg-slate-100 transition-colors">
+          <i id="soundIcon" class="fa-solid fa-volume-high text-xs"></i>
         </button>
-
-        <!-- おうちコード情報 -->
-        <div id="roomBadge" onclick="openRoomModal()" class="bg-amber-100 hover:bg-amber-200 cursor-pointer border-2 border-amber-300 px-2.5 py-0.5 rounded-full flex items-center space-x-1.5 transition-colors">
-          <span class="text-[10px] font-bold text-amber-700">おうち:</span>
-          <span id="roomCodeDisplay" class="font-black text-amber-900 tracking-wide text-xs">------</span>
-          <i class="fa-solid fa-arrows-rotate text-[10px] text-amber-600"></i>
+        <!-- おうちコード確認用バッジ -->
+        <div id="roomBadge" onclick="openRoomModal()" class="bg-slate-100 hover:bg-slate-200 cursor-pointer border border-slate-200 px-2 py-0.5 rounded-full flex items-center space-x-1 text-[10px]">
+          <span class="font-bold text-slate-500">おうちID:</span>
+          <span id="roomCodeDisplay" class="font-black text-slate-700 tracking-wider">------</span>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- メインコンテンツ（全体を画面内に収めるためのflexコンテナ） -->
-  <main class="flex-grow max-w-4xl w-full mx-auto p-3 flex flex-col justify-between overflow-hidden">
+  <!-- メイン表示領域（デバイスの高さに合わせて完璧に伸縮） -->
+  <main class="flex-grow max-w-md w-full mx-auto px-4 py-2 flex flex-col justify-between overflow-hidden">
     
-    <!-- 1. おうちコード設定画面（未設定時に表示） -->
-    <div id="roomSetupScreen" class="bg-white border-4 border-yellow-300 rounded-3xl p-5 md:p-8 shadow-xl text-center max-w-sm mx-auto my-auto flex flex-col space-y-4">
+    <!-- ================= 1. おうちコード入力画面（通常は自動スキップ） ================= -->
+    <div id="roomSetupScreen" class="hidden bg-white border-4 border-yellow-300 rounded-3xl p-5 shadow-xl text-center my-auto flex flex-col space-y-4">
       <div class="text-5xl float-animation">🏡</div>
       <div>
         <h2 class="text-xl font-black text-amber-600">おうちコードをきめよう！</h2>
-        <p class="text-[11px] text-slate-500 mt-1 font-bold leading-relaxed">
-          おなじコードをiPadやスマホにいれると、<br>どこからでもおなじポイントがみられるよ！
+        <p class="text-[11px] text-slate-400 font-bold leading-relaxed mt-1">
+          おなじコードをいれると、ほかの端末とポイントが同期されます。
         </p>
       </div>
-
-      <div class="space-y-1.5">
-        <label class="block text-xs font-black text-slate-600">5ケタのすうじを入力してね</label>
-        <input type="text" id="roomCodeInput" maxlength="5" placeholder="例: 12345" 
-               class="w-full text-center text-2xl font-black tracking-widest bg-amber-50 border-2 border-amber-200 focus:border-amber-400 focus:outline-none rounded-xl py-2 text-amber-800">
+      <div class="space-y-2">
+        <input type="text" id="roomCodeInput" inputmode="numeric" pattern="[0-9]*" maxlength="5" value="12345" placeholder="12345" 
+               class="w-full text-center text-2xl font-black tracking-widest bg-amber-50 border-2 border-amber-200 focus:border-amber-400 focus:outline-none rounded-2xl py-2 text-amber-800">
       </div>
-
-      <div class="flex flex-col space-y-2">
-        <button onclick="joinRoom()" style="--shadow-color: #d97706" 
-                class="btn-3d w-full bg-amber-500 hover:bg-amber-400 text-white font-black text-md py-2.5 rounded-xl border-b-4 border-amber-700">
-          スタートする！ ✨
-        </button>
-        <button onclick="generateRandomRoom()" class="text-[10px] font-bold text-slate-400 hover:text-slate-600 underline">
-          コードをあたらしくつくる
-        </button>
-      </div>
+      <button onclick="joinRoom()" style="--shadow-color: #d97706" 
+              class="btn-3d w-full bg-amber-500 hover:bg-amber-400 text-white font-black text-base py-3 rounded-2xl border-b-4 border-amber-700">
+        スタートする！ ✨
+      </button>
     </div>
 
-    <!-- 2. アプリ本体（おうちコード設定後に表示。h-fullとoverflow-hiddenで収める） -->
-    <div id="mainAppScreen" class="hidden flex-grow flex flex-col justify-between space-y-3 overflow-hidden h-full">
+    <!-- ================= 2. メイン画面（起動時に一瞬で表示されます） ================= -->
+    <div id="mainAppScreen" class="hidden flex-grow flex flex-col justify-between space-y-2 overflow-hidden">
       
-      <!-- メインポイント表示盤（高さをコンパクト化、Undoボタンを統合） -->
-      <div class="bg-gradient-to-r from-amber-400 to-yellow-300 border-[3px] border-white rounded-2xl p-3 text-center shadow-md relative overflow-hidden shrink-0">
-        <!-- 背景の可愛い装飾 -->
-        <div class="absolute -top-6 -left-6 text-white/10 text-7xl font-black pointer-events-none">⭐</div>
-        <div class="absolute -bottom-6 -right-6 text-white/10 text-7xl font-black pointer-events-none">✨</div>
+      <!-- メインポイント表示盤（ポイント数を圧倒的サイズに拡大！） -->
+      <div class="bg-gradient-to-br from-amber-400 via-yellow-300 to-amber-300 border-2 border-white rounded-2xl p-3 shadow-md relative overflow-hidden flex-shrink-0">
+        <div class="absolute -top-4 -left-4 text-white/25 text-5xl font-black pointer-events-none">⭐</div>
+        <p class="text-white font-black text-[11px] text-center tracking-wider drop-shadow-sm leading-none">いま たまっている ぽいんと</p>
         
-        <p class="text-white font-black text-sm tracking-wider drop-shadow-md">いま たまっている ぽいんと</p>
-        <div class="my-0.5 flex items-center justify-center space-x-2">
-          <span class="text-white text-3xl drop-shadow-md animate-bounce-slow"><i class="fa-solid fa-crown"></i></span>
-          <span id="totalPoints" class="text-4xl md:text-5xl font-black text-white tracking-tight drop-shadow-[0_3px_0_rgba(217,119,6,1)]">
-            0
-          </span>
-          <span class="text-amber-900 font-black text-xl drop-shadow-sm"> P</span>
-          <span class="text-white/95 font-bold text-xs bg-amber-600/40 px-2 py-0.5 rounded-full">
-            ( 1P = 1円 )
-          </span>
+        <div class="flex items-center justify-between px-1 mt-1">
+          <!-- 左側：圧倒的に大きなポイント表示 -->
+          <div class="flex items-center space-x-1.5">
+            <span class="text-white text-3xl drop-shadow-md animate-bounce-slow"><i class="fa-solid fa-crown text-amber-100"></i></span>
+            <div class="flex items-baseline">
+              <!-- テキストサイズをさらに大きく目立たせる（text-5xl→text-6xl md:text-7xl） -->
+              <span id="totalPoints" class="text-6xl md:text-7xl font-black text-white tracking-tighter drop-shadow-[0_4px_0_rgba(217,119,6,1)]">0</span>
+              <span class="text-amber-950 font-black text-sm ml-1"> P</span>
+              <span class="text-amber-900/80 text-[10px] font-black ml-2 bg-white/50 px-2 py-0.5 rounded-lg border border-amber-200">1円</span>
+            </div>
+          </div>
           
-          <!-- もどす（Undo）ボタン：押し間違い対策 -->
-          <button onclick="undoLastAction(event)" style="--shadow-color: #94a3b8" 
-                  class="btn-3d bg-slate-100 hover:bg-white text-slate-700 border-b-[3px] border-slate-400 px-2.5 py-1 rounded-xl flex items-center space-x-1 ml-3 transition-all">
-            <span class="text-xs">↩️</span>
-            <span class="text-[10px] font-black leading-tight">もどす</span>
+          <!-- 右側：「1こもどす」ボタン -->
+          <button onclick="undoLastAction(event)" class="btn-undo bg-slate-100 hover:bg-slate-200 text-slate-600 px-2.5 py-1.5 rounded-xl text-[11px] font-black flex items-center space-x-1 border border-slate-300">
+            <i class="fa-solid fa-rotate-left"></i>
+            <span>もどす</span>
           </button>
-        </div>
-        <div class="text-[9px] font-black text-amber-950/70">
-          ファミリーコード: <span id="currentRoomCodeLabel" class="underline font-bold">-----</span>
         </div>
       </div>
 
-      <!-- タブ切り替えボタン -->
-      <div class="flex bg-amber-100 p-1 rounded-xl border border-amber-200 shrink-0">
-        <button onclick="switchTab('earn')" id="tabBtn-earn" class="flex-1 py-2 text-center rounded-lg font-black text-xs md:text-sm transition-all text-amber-900 bg-white shadow-xs">
+      <!-- 切り替えタブ -->
+      <div class="flex bg-amber-100/60 p-1 rounded-xl border border-amber-200/60 flex-shrink-0">
+        <button onclick="switchTab('earn')" id="tabBtn-earn" class="flex-1 py-1.5 text-center rounded-lg text-xs font-black transition-all text-amber-900 bg-white shadow-sm">
           <i class="fa-solid fa-circle-plus mr-1"></i> ためにいく
         </button>
-        <button onclick="switchTab('spend')" id="tabBtn-spend" class="flex-1 py-2 text-center rounded-lg font-black text-xs md:text-sm transition-all text-slate-500 hover:text-slate-800">
-          <i class="fa-solid fa-wallet mr-1"></i> つかう (1円=1P)
+        <button onclick="switchTab('spend')" id="tabBtn-spend" class="flex-1 py-1.5 text-center rounded-lg text-xs font-black transition-all text-slate-500 hover:text-slate-800">
+          <i class="fa-solid fa-wallet mr-1"></i> つかう
         </button>
-        <button onclick="switchTab('history')" id="tabBtn-history" class="flex-1 py-2 text-center rounded-lg font-black text-xs md:text-sm transition-all text-slate-500 hover:text-slate-800">
+        <button onclick="switchTab('history')" id="tabBtn-history" class="flex-1 py-1.5 text-center rounded-lg text-xs font-black transition-all text-slate-500 hover:text-slate-800">
           <i class="fa-solid fa-clock-rotate-left mr-1"></i> きろく
         </button>
       </div>
 
-      <!-- 各種タブコンテンツ (flex-grow と overflow-hidden で高さを自動制御) -->
-      <div class="flex-grow overflow-hidden relative">
+      <!-- コンテンツエリア -->
+      <div class="flex-grow overflow-hidden relative flex flex-col justify-center">
         
-        <!-- 【ためるタブ：3ボタンが絶対に隠れないよう、常に横並び3列にレイアウト変更】 -->
-        <div id="tabContent-earn" class="tab-content active">
-          <div class="grid grid-cols-3 gap-2 h-full items-center py-1">
-            <!-- タッチでポイント (1P) -->
-            <button onclick="addPoints(1, 'タッチでポイント！', event)" style="--shadow-color: #0d9488" 
-                    class="btn-3d bg-emerald-400 hover:bg-emerald-300 text-white rounded-2xl p-2.5 flex flex-col items-center justify-center space-y-1 h-full min-h-[90px]">
-              <span class="text-3xl">👈</span>
-              <span class="font-black text-xs md:text-sm tracking-wider leading-none">タッチ</span>
-              <span class="bg-emerald-600/30 px-2 py-0.5 rounded-full text-[10px] font-black">+1 P</span>
+        <!-- 【ためるタブ】ボタンのサイズを人間工学に基きキュート＆コンパクト（h-28）に縮小！ -->
+        <div id="tabContent-earn" class="tab-content active h-full justify-center">
+          <div class="grid grid-cols-3 gap-3.5 w-full my-auto">
+            
+            <!-- タッチ (1P) -->
+            <button onclick="addPoints(1, 'タッチしたよ！ 👈', event)" style="--shadow-color: #0d9488" 
+                    class="btn-3d bg-emerald-400 hover:bg-emerald-300 text-white rounded-2xl p-2 flex flex-col items-center justify-between h-28 border-b-[4px] border-emerald-600">
+              <span class="text-2xl mt-1">👈</span>
+              <div class="text-center w-full mb-1">
+                <span class="block font-black text-[11px] leading-none tracking-tighter text-emerald-50">タッチ</span>
+                <span class="inline-block bg-emerald-600/30 px-2 py-0.5 rounded-full text-[9px] font-black mt-1 leading-none">+1 P</span>
+              </div>
             </button>
 
             <!-- マッサージ (5P) -->
-            <button onclick="addPoints(5, 'かたもみ / マッサージ', event)" style="--shadow-color: #b45309" 
-                    class="btn-3d bg-amber-500 hover:bg-amber-400 text-white rounded-2xl p-2.5 flex flex-col items-center justify-center space-y-1 h-full min-h-[90px]">
-              <span class="text-3xl">💆</span>
-              <span class="font-black text-xs md:text-sm tracking-wider leading-none">マッサージ</span>
-              <span class="bg-amber-700/30 px-2 py-0.5 rounded-full text-[10px] font-black">+5 P</span>
+            <button onclick="addPoints(5, 'マッサージをしたよ 💆', event)" style="--shadow-color: #b45309" 
+                    class="btn-3d bg-amber-500 hover:bg-amber-400 text-white rounded-2xl p-2 flex flex-col items-center justify-between h-28 border-b-[4px] border-amber-700">
+              <span class="text-2xl mt-1">💆</span>
+              <div class="text-center w-full mb-1">
+                <span class="block font-black text-[11px] leading-none tracking-tighter text-amber-50">マッサージ</span>
+                <span class="inline-block bg-amber-700/30 px-2 py-0.5 rounded-full text-[9px] font-black mt-1 leading-none">+5 P</span>
+              </div>
             </button>
 
             <!-- お手伝い (10P) -->
-            <button onclick="addPoints(10, 'おてつだいをしたよ', event)" style="--shadow-color: #db2777" 
-                    class="btn-3d bg-pink-500 hover:bg-pink-400 text-white rounded-2xl p-2.5 flex flex-col items-center justify-center space-y-1 h-full min-h-[90px]">
-              <span class="text-3xl">🧹</span>
-              <span class="font-black text-xs md:text-sm tracking-wider leading-none">おてつだい</span>
-              <span class="bg-pink-700/30 px-2 py-0.5 rounded-full text-[10px] font-black">+10 P</span>
+            <button onclick="addPoints(10, 'おてつだいをしたよ 🧹', event)" style="--shadow-color: #db2777" 
+                    class="btn-3d bg-pink-500 hover:bg-pink-400 text-white rounded-2xl p-2 flex flex-col items-center justify-between h-28 border-b-[4px] border-pink-700">
+              <span class="text-2xl mt-1">🧹</span>
+              <div class="text-center w-full mb-1">
+                <span class="block font-black text-[11px] leading-none tracking-tighter text-pink-50">おてつだい</span>
+                <span class="inline-block bg-pink-700/30 px-2 py-0.5 rounded-full text-[9px] font-black mt-1 leading-none">+10 P</span>
+              </div>
             </button>
+            
           </div>
         </div>
 
-        <!-- 【つかうタブ】 1ポイント＝1円 直接入力型 -->
-        <div id="tabContent-spend" class="tab-content">
-          <div class="bg-white border-[3px] border-yellow-200 rounded-2xl p-3 shadow-inner h-full flex flex-col justify-between overflow-y-auto">
+        <!-- 【つかうタブ】1円=1P その場入力フォーム -->
+        <div id="tabContent-spend" class="tab-content h-full justify-center">
+          <div class="bg-white border border-yellow-200 rounded-2xl p-3.5 shadow-inner w-full max-h-48 my-auto flex flex-col justify-between">
+            <h3 class="text-[11px] font-black text-amber-700 text-center mb-1.5">🎁 たまったポイントをつかう（1円 ＝ 1P）</h3>
             
-            <div class="text-center">
-              <h3 class="text-md font-black text-amber-700">🎁 ためた ぽいんと を つかおう！</h3>
-              <p class="text-[11px] text-slate-400 font-bold">1ポイント ＝ 1えん として おうちの人とつかってね</p>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 my-2 flex-grow items-center">
-              <!-- 左側：入力 -->
-              <div class="space-y-2">
-                <div>
-                  <label class="block text-[10px] font-black text-slate-500 mb-0.5">いくら（何ポイント）つかう？</label>
-                  <div class="relative flex items-center">
-                    <input type="number" id="directSpendAmount" min="1" placeholder="例: 100"
-                           class="w-full text-center text-xl font-black bg-amber-50/50 border-2 border-amber-200 focus:border-amber-400 focus:outline-none rounded-xl py-1.5 text-amber-800 pr-10">
-                    <span class="absolute right-3 font-black text-amber-700 text-sm">円 (P)</span>
+            <div class="space-y-1.5">
+              <div class="flex space-x-2">
+                <div class="w-1/3">
+                  <label class="block text-[9px] font-bold text-slate-400 mb-0.5">いくら？</label>
+                  <div class="relative">
+                    <input type="number" id="spendAmount" min="1" placeholder="50" inputmode="numeric" pattern="[0-9]*"
+                           class="w-full text-center text-sm font-black bg-amber-50 border border-amber-200 focus:border-amber-400 focus:outline-none rounded-xl py-1 text-amber-800 pr-5">
+                    <span class="absolute right-2 top-1/2 transform -translate-y-1/2 text-[9px] font-bold text-amber-600">円</span>
                   </div>
                 </div>
-                <div>
-                  <label class="block text-[10px] font-black text-slate-500 mb-0.5">つかうりゆう（ごほうび）</label>
-                  <input type="text" id="directSpendReason" placeholder="例: チョコを1こかう！"
-                         class="w-full text-center text-sm font-bold bg-amber-50/50 border-2 border-amber-200 focus:border-amber-400 focus:outline-none rounded-xl py-1.5 text-amber-800">
+                <div class="w-2/3">
+                  <label class="block text-[9px] font-bold text-slate-400 mb-0.5">なににつかう？</label>
+                  <input type="text" id="spendReason" placeholder="例: おやつとこうかん"
+                         class="w-full text-center text-xs font-bold bg-amber-50 border border-amber-200 focus:border-amber-400 focus:outline-none rounded-xl py-1 text-amber-800">
                 </div>
               </div>
 
-              <!-- 右側：お助け早見表 -->
-              <div class="bg-amber-50/60 p-2.5 rounded-xl border border-amber-100 flex flex-col justify-center space-y-1.5">
-                <span class="text-[10px] font-black text-amber-800"><i class="fa-solid fa-circle-info"></i> おうちルールかんたんメモ</span>
-                <div class="flex justify-between text-xs font-bold text-slate-600 border-b border-amber-200/50 pb-1">
-                  <span>10ポイント</span> <span>＝ 10円ぶん</span>
-                </div>
-                <div class="flex justify-between text-xs font-bold text-slate-600 border-b border-amber-200/50 pb-1">
-                  <span>50ポイント</span> <span>＝ 50円ぶん</span>
-                </div>
-                <div class="flex justify-between text-xs font-bold text-slate-600">
-                  <span>100ポイント</span> <span>＝ 100円ぶん</span>
-                </div>
-              </div>
+              <button onclick="submitSpend(event)" style="--shadow-color: #b45309"
+                      class="btn-3d w-full bg-amber-500 hover:bg-amber-400 text-white rounded-xl font-black text-xs border-b-4 border-amber-700 py-1.5 mt-2">
+                ポイントをつかう！ 🎁
+              </button>
             </div>
-
-            <!-- つかう実行ボタン -->
-            <button onclick="submitDirectSpend(event)" style="--shadow-color: #b45309"
-                    class="btn-3d w-full bg-amber-500 hover:bg-amber-400 text-white rounded-xl font-black text-sm border-b-4 border-amber-700 py-2.5">
-              ポイントをつかう！ 🎁
-            </button>
-
           </div>
         </div>
 
-        <!-- 【きろくタブ】 -->
-        <div id="tabContent-history" class="tab-content">
-          <div class="bg-white border-[3px] border-yellow-200 rounded-2xl p-3 shadow-inner h-full flex flex-col overflow-hidden">
-            <h3 class="text-sm font-black text-amber-700 mb-1.5 text-center shrink-0">📜 これまでのきろく</h3>
-            
-            <!-- スクロール可能な履歴領域 -->
-            <div id="historyList" class="flex-grow overflow-y-auto space-y-1.5 pr-1">
-              <!-- 履歴データがJavaScriptでここに挿入されます -->
-              <div class="text-center py-8 text-slate-400 font-bold text-xs">
+        <!-- 【きろくタブ】スクロール可能な履歴リスト -->
+        <div id="tabContent-history" class="tab-content h-full justify-start overflow-hidden">
+          <div class="bg-white border border-yellow-200 rounded-2xl p-2.5 shadow-inner h-full overflow-y-auto max-h-48">
+            <div id="historyList" class="space-y-1.5">
+              <!-- 履歴 -->
+              <div class="text-center py-6 text-slate-400 font-bold text-xs">
                 まだきろくがありません。ポイントをためてみよう！
               </div>
             </div>
@@ -281,36 +253,36 @@
 
   </main>
 
-  <!-- フッター (コンパクトにして全体の高さを圧迫しない) -->
-  <footer class="bg-slate-100 border-t border-slate-200 py-1.5 text-center shrink-0">
-    <p class="text-[9px] text-slate-400 font-bold">
-      © キラキラ！ぽいんとハウス - おうちのみんなで使ってね！
+  <!-- フッター -->
+  <footer class="bg-slate-100 border-t border-slate-200 py-1 text-center flex-shrink-0">
+    <p class="text-[8px] text-slate-400 font-bold">
+      © キラキラ！ぽいんとハウス
     </p>
   </footer>
 
-  <!-- ================= モーダル群 (最小限にして画面を遮らない) ================= -->
+  <!-- ================= モーダル群 ================= -->
 
-  <!-- おうちコードの変更・確認モーダル -->
-  <div id="roomModal" class="fixed inset-0 bg-black/50 z-40 hidden flex items-center justify-center p-4">
-    <div class="bg-white border-4 border-yellow-300 rounded-3xl p-5 max-w-xs w-full shadow-2xl relative">
-      <button onclick="closeRoomModal()" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600">
-        <i class="fa-solid fa-xmark text-xl"></i>
+  <!-- おうちコード変更・確認 -->
+  <div id="roomModal" class="fixed inset-0 bg-black/60 z-40 hidden flex items-center justify-center p-4">
+    <div class="bg-white border-2 border-yellow-300 rounded-2xl p-4 max-w-xs w-full shadow-2xl relative">
+      <button onclick="closeRoomModal()" class="absolute top-2.5 right-2.5 text-slate-400 hover:text-slate-600">
+        <i class="fa-solid fa-xmark text-lg"></i>
       </button>
-      <div class="text-center space-y-3">
-        <div class="text-3xl">🏡</div>
-        <h3 class="text-md font-black text-slate-800">おうちコードの設定</h3>
-        <p class="text-[10px] text-slate-500 font-bold leading-relaxed">
-          別のデバイスとおなじコードを入力すると、おなじポイントがリアルタイムでつながるよ！
+      <div class="text-center space-y-2.5">
+        <div class="text-2xl">🏡</div>
+        <h3 class="text-xs font-black text-slate-800">おうちコードのせってい</h3>
+        <p class="text-[9px] text-slate-400 font-bold leading-relaxed">
+          もしべつの端末ともポイントをあわせたい場合は、同じコードを入力してね。
         </p>
-        <div class="bg-amber-50 border-2 border-amber-200 rounded-xl p-2">
-          <span class="text-[9px] text-amber-600 font-black">いまのコード</span>
-          <div id="currentRoomCodeInModal" class="text-2xl font-black text-amber-800 tracking-widest mt-0.5">-----</div>
+        <div class="bg-amber-50 border border-amber-100 rounded-xl p-2">
+          <span class="text-[9px] text-amber-500 font-black">いまのコード</span>
+          <div id="currentRoomCodeInModal" class="text-xl font-black text-amber-800 tracking-wider">-----</div>
         </div>
-        <div class="border-t border-slate-100 pt-3 space-y-2">
-          <button onclick="logoutRoom()" class="w-full py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-xl font-black text-xs transition-colors">
-            ちがうコードにかえる
+        <div class="border-t border-slate-100 pt-2.5 space-y-1.5">
+          <button onclick="logoutRoom()" class="w-full py-1.5 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl font-black text-[10px] transition-colors">
+            べつのコードにかえる
           </button>
-          <button onclick="closeRoomModal()" class="w-full py-2 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-xl font-black text-xs transition-colors">
+          <button onclick="closeRoomModal()" class="w-full py-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-xl font-black text-[10px] transition-colors">
             とじる
           </button>
         </div>
@@ -318,30 +290,28 @@
     </div>
   </div>
 
-  <!-- ポイント不足警告モーダル -->
-  <div id="warningModal" class="fixed inset-0 bg-black/50 z-40 hidden flex items-center justify-center p-4">
-    <div class="bg-white border-4 border-red-300 rounded-2xl p-5 max-w-xs w-full shadow-2xl text-center space-y-3">
-      <div class="text-4xl">😭</div>
-      <h3 class="text-md font-black text-red-600">ぽいんとが たりないよ！</h3>
-      <p class="text-xs text-slate-500 font-bold leading-relaxed">
-        がんばっておてつだいやマッサージをして、ポイントをためてね！
+  <!-- ポイント不足警告 -->
+  <div id="warningModal" class="fixed inset-0 bg-black/60 z-40 hidden flex items-center justify-center p-4">
+    <div class="bg-white border-2 border-red-200 rounded-2xl p-4 max-w-xs w-full shadow-2xl text-center space-y-2.5">
+      <div class="text-3xl animate-bounce-slow">😭</div>
+      <h3 class="text-xs font-black text-red-500">ぽいんとがたりないよ！</h3>
+      <p class="text-[10px] text-slate-400 font-bold leading-relaxed">
+        がんばっておてつだいやマッサージをして、ぽいんとをためてね！
       </p>
-      <button onclick="closeWarningModal()" class="w-full py-2 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-xl font-black text-xs transition-colors">
+      <button onclick="closeWarningModal()" class="w-full py-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-xl font-black text-[10px] transition-colors">
         はーい！ 👍
       </button>
     </div>
   </div>
 
-  <!-- ================= JavaScript / アプリロジック ================= -->
-  <!-- Firebase JS SDK の読み込みと設定 -->
+  <!-- ================= JavaScript (自動初期化 & 100%ローカル保存担保版) ================= -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // アプリケーション状態
-    window.appState = {
-      roomId: "", 
+    const appState = {
+      roomId: "",
       points: 0,
       logs: [],
       soundEnabled: true,
@@ -349,13 +319,16 @@
       db: null,
       auth: null,
       appId: "kids-point-app",
-      unsubscribeRoom: null 
+      unsubscribeRoom: null
     };
 
+    window.appState = appState;
+
+    // Firebaseの起動をチェック
     const initFirebase = async () => {
       try {
         const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'kids-point-app';
-        window.appState.appId = appId;
+        appState.appId = appId;
 
         if (typeof window.__firebase_config !== 'undefined' && window.__firebase_config) {
           const firebaseConfig = JSON.parse(window.__firebase_config);
@@ -363,8 +336,8 @@
           const authInstance = getAuth(app);
           const dbInstance = getFirestore(app);
 
-          window.appState.auth = authInstance;
-          window.appState.db = dbInstance;
+          appState.auth = authInstance;
+          appState.db = dbInstance;
 
           if (typeof window.__initial_auth_token !== 'undefined' && window.__initial_auth_token) {
             await signInWithCustomToken(authInstance, window.__initial_auth_token);
@@ -374,57 +347,45 @@
 
           onAuthStateChanged(authInstance, (user) => {
             if (user) {
-              window.appState.firebaseActive = true;
-              console.log("Firebase 接続成功 (UID:", user.uid, ")");
-              checkSavedRoom();
+              appState.firebaseActive = true;
+              autoLoginRoom();
             }
           });
         } else {
-          console.log("Firebase configが見つかりません。ローカル保存モードで動作します。");
-          checkSavedRoom();
+          autoLoginRoom();
         }
       } catch (error) {
-        console.error("Firebase初期化エラー。ローカル保存モードに移行します:", error);
-        checkSavedRoom();
+        autoLoginRoom();
       }
     };
 
-    const checkSavedRoom = () => {
+    // 自動でおうちコード「12345」を使ってログイン
+    const autoLoginRoom = () => {
       const savedRoom = localStorage.getItem("point_house_room_id");
-      if (savedRoom && savedRoom.length === 5) {
-        window.appState.roomId = savedRoom;
-        startRoomSync(savedRoom);
-      } else {
-        showScreen("roomSetupScreen");
-      }
+      // 保存されているおうちコードがなければ、デフォルトの「12345」を強制自動セット！
+      const targetRoom = (savedRoom && savedRoom.length === 5) ? savedRoom : "12345";
+      startRoomSync(targetRoom);
     };
 
-    window.startRoomSync = async (roomId) => {
-      window.appState.roomId = roomId;
+    // クラウド & ローカル同期
+    const startRoomSync = async (roomId) => {
+      appState.roomId = roomId;
       localStorage.setItem("point_house_room_id", roomId);
 
       document.getElementById("roomCodeDisplay").innerText = roomId;
-      document.getElementById("currentRoomCodeLabel").innerText = roomId;
       document.getElementById("currentRoomCodeInModal").innerText = roomId;
 
+      // 面倒な初期画面をスキップして、即アプリ起動！
       showScreen("mainAppScreen");
 
-      if (window.appState.unsubscribeRoom) {
-        window.appState.unsubscribeRoom();
+      if (appState.unsubscribeRoom) {
+        appState.unsubscribeRoom();
       }
 
-      if (window.appState.firebaseActive && window.appState.db) {
-        const roomDocRef = doc(
-          window.appState.db, 
-          'artifacts', 
-          window.appState.appId, 
-          'public', 
-          'data', 
-          'rooms', 
-          roomId
-        );
+      if (appState.firebaseActive && appState.db) {
+        const roomDocRef = doc(appState.db, 'artifacts', appState.appId, 'public', 'data', 'rooms', roomId);
 
-        window.appState.unsubscribeRoom = onSnapshot(roomDocRef, (docSnap) => {
+        appState.unsubscribeRoom = onSnapshot(roomDocRef, (docSnap) => {
           if (docSnap.exists()) {
             const data = docSnap.data();
             updateLocalData(data.points || 0, data.logs || []);
@@ -433,7 +394,6 @@
             updateLocalData(0, []);
           }
         }, (error) => {
-          console.error("Firestore監視エラー:", error);
           loadLocalBackup(roomId);
         });
       } else {
@@ -441,17 +401,10 @@
       }
     };
 
-    window.saveDataToCloud = async (roomId, points, logs) => {
-      if (window.appState.firebaseActive && window.appState.db) {
-        const roomDocRef = doc(
-          window.appState.db, 
-          'artifacts', 
-          window.appState.appId, 
-          'public', 
-          'data', 
-          'rooms', 
-          roomId
-        );
+    // セーブ
+    const saveDataToCloud = async (roomId, points, logs) => {
+      if (appState.firebaseActive && appState.db) {
+        const roomDocRef = doc(appState.db, 'artifacts', appState.appId, 'public', 'data', 'rooms', roomId);
         try {
           await setDoc(roomDocRef, {
             points: points,
@@ -459,18 +412,11 @@
             updatedAt: Date.now()
           }, { merge: true });
         } catch (e) {
-          console.error("データ送信エラー:", e);
+          console.error("Cloud save error:", e);
         }
       }
+      // 何があってもブラウザに強力保存！消えません
       localStorage.setItem(`room_data_${roomId}`, JSON.stringify({ points, logs }));
-    };
-
-    const updateLocalData = (points, logs) => {
-      window.appState.points = points;
-      window.appState.logs = logs.sort((a, b) => b.timestamp - a.timestamp);
-
-      document.getElementById("totalPoints").innerText = points;
-      renderHistory();
     };
 
     const loadLocalBackup = (roomId) => {
@@ -487,30 +433,31 @@
       }
     };
 
-    window.onload = () => {
+    const updateLocalData = (points, logs) => {
+      appState.points = points;
+      appState.logs = logs.sort((a, b) => b.timestamp - a.timestamp);
+      document.getElementById("totalPoints").innerText = points;
+      renderHistory();
+    };
+
+    window.startRoomSync = startRoomSync;
+    window.saveDataToCloud = saveDataToCloud;
+    window.updateLocalData = updateLocalData;
+
+    window.addEventListener("load", () => {
       initFirebase();
       initParticles();
-    };
+    });
   </script>
 
+  <!-- 通常のUI制御スクリプト -->
   <script>
-    // 画面の切り替え
     function showScreen(screenId) {
       document.getElementById("roomSetupScreen").classList.add("hidden");
       document.getElementById("mainAppScreen").classList.add("hidden");
       document.getElementById(screenId).classList.remove("hidden");
     }
 
-    // おうちコードをランダム生成
-    function generateRandomRoom() {
-      let code = "";
-      for (let i = 0; i < 5; i++) {
-        code += Math.floor(Math.random() * 10);
-      }
-      document.getElementById("roomCodeInput").value = code;
-    }
-
-    // 入力されたおうちコードでスタート
     function joinRoom() {
       const input = document.getElementById("roomCodeInput").value.trim();
       if (input.length !== 5 || isNaN(input)) {
@@ -522,27 +469,24 @@
       window.startRoomSync(input);
     }
 
-    // アプリ内通知（アラートの代わり）
     function alertInApp(msg) {
       const toast = document.createElement("div");
-      toast.className = "fixed bottom-12 left-1/2 transform -translate-x-1/2 bg-slate-800/90 text-white px-5 py-2 rounded-full text-xs font-black shadow-md z-50 animate-bounce";
+      toast.className = "fixed bottom-12 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-full text-[11px] font-black shadow-lg z-50 animate-bounce";
       toast.innerText = msg;
       document.body.appendChild(toast);
       setTimeout(() => {
         toast.remove();
-      }, 1800);
+      }, 1500);
     }
 
-    // ルーム変更（ログアウト）
     function logoutRoom() {
       localStorage.removeItem("point_house_room_id");
       window.appState.roomId = "";
-      document.getElementById("roomCodeInput").value = "";
+      document.getElementById("roomCodeInput").value = "12345";
       closeRoomModal();
       showScreen("roomSetupScreen");
     }
 
-    // タブの切り替え
     function switchTab(tabName) {
       document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
       document.querySelectorAll("[id^='tabBtn-']").forEach(el => {
@@ -558,9 +502,7 @@
       playSynthSwitch();
     }
 
-    // ================= ポイント操作 =================
-
-    // ポイントを増やす
+    // ポイントをためる
     function addPoints(amount, label, event) {
       const currentPoints = window.appState.points;
       const newPoints = currentPoints + amount;
@@ -575,24 +517,50 @@
 
       const updatedLogs = [...window.appState.logs, newLog];
       window.saveDataToCloud(window.appState.roomId, newPoints, updatedLogs);
+      window.updateLocalData(newPoints, updatedLogs);
 
-      if (event) {
+      if (event && event.clientX) {
         spawnParticles(event.clientX, event.clientY);
+      } else {
+        spawnParticles(window.innerWidth / 2, window.innerHeight / 2);
       }
       playAddSound(amount);
     }
 
-    // 1ポイント＝1円の直接入力消費機能（ユーザー指定）
-    function submitDirectSpend(event) {
-      const inputAmount = document.getElementById("directSpendAmount");
-      const inputReason = document.getElementById("directSpendReason");
+    // 1こ戻す (Undo)
+    function undoLastAction(event) {
+      if (!window.appState.logs || window.appState.logs.length === 0) {
+        playSynthError();
+        alertInApp("もどすきろくがありません！");
+        return;
+      }
+
+      const sortedLogs = [...window.appState.logs].sort((a, b) => b.timestamp - a.timestamp);
+      const lastAction = sortedLogs[0];
       
-      const amount = parseInt(inputAmount.value);
-      let reason = inputReason.value.trim();
+      const updatedLogs = window.appState.logs.filter(log => log.id !== lastAction.id);
+      const newPoints = Math.max(0, window.appState.points - lastAction.points);
+
+      window.saveDataToCloud(window.appState.roomId, newPoints, updatedLogs);
+      window.updateLocalData(newPoints, updatedLogs);
+
+      if (event && event.clientX) {
+        spawnUndoParticles(event.clientX, event.clientY);
+      } else {
+        spawnUndoParticles(window.innerWidth / 2, window.innerHeight / 2);
+      }
+      playSynthUndo();
+      alertInApp("1つ前の操作をもどしたよ！");
+    }
+
+    // つかう（1円＝1P）
+    function submitSpend(event) {
+      const amount = parseInt(document.getElementById("spendAmount").value);
+      let reason = document.getElementById("spendReason").value.trim();
 
       if (!amount || amount <= 0) {
         playSynthError();
-        alertInApp("ポイントをいれてね！");
+        alertInApp("えん（ポイント）をいれてね！");
         return;
       }
 
@@ -603,14 +571,14 @@
       }
 
       if (!reason) {
-        reason = "お買い物 / ごほうび 🎁";
+        reason = "おかいもの・ごほうび 🎁";
       }
 
       const currentPoints = window.appState.points;
       const newPoints = currentPoints - amount;
       const newLog = {
         id: crypto.randomUUID(),
-        text: `🎁 ${reason} につかった`,
+        text: `🎁 ${reason} に ${amount}円つかった`,
         points: -amount,
         timestamp: Date.now(),
         type: "spend"
@@ -618,57 +586,29 @@
 
       const updatedLogs = [...window.appState.logs, newLog];
       window.saveDataToCloud(window.appState.roomId, newPoints, updatedLogs);
+      window.updateLocalData(newPoints, updatedLogs);
 
-      // 入力欄をリセット
-      inputAmount.value = "";
-      inputReason.value = "";
+      document.getElementById("spendAmount").value = "";
+      document.getElementById("spendReason").value = "";
 
-      if (event) {
-        spawnSpendParticles(event.clientX, event.clientY || (window.innerHeight / 2));
+      if (event && event.clientX) {
+        spawnSpendParticles(event.clientX, event.clientY);
+      } else {
+        spawnSpendParticles(window.innerWidth / 2, window.innerHeight / 2);
       }
       playSynthSpend();
-      alertInApp(`${amount} 円ぶん(P) つかったよ！`);
-    }
-
-    // 【1個もどす（やりなおし）機能】
-    function undoLastAction(event) {
-      if (!window.appState.logs || window.appState.logs.length === 0) {
-        playSynthError();
-        alertInApp("もどせる きろくが ないよ！");
-        return;
-      }
-
-      // ログの最新1件を取り出す (現在 logs は timestamp 降順で並んでいるため index 0 が最新)
-      const lastLog = window.appState.logs[0];
-      
-      // 最新のログを除外した配列を作成
-      const updatedLogs = window.appState.logs.filter(log => log.id !== lastLog.id);
-      
-      // ポイントを元に戻す (加算分を引く、あるいは消費分を足す)
-      const newPoints = window.appState.points - lastLog.points;
-
-      // データベースと同期
-      window.saveDataToCloud(window.appState.roomId, newPoints, updatedLogs);
-
-      // 取り消しエフェクト（ボタンのあった位置でパーティクル）
-      if (event) {
-        spawnUndoParticles(event.clientX, event.clientY);
-      }
-      
-      playSynthUndo();
-      alertInApp(`「${lastLog.text}」をとりけしたよ！`);
+      alertInApp(`${amount} 円分つかったよ！`);
     }
 
     function closeWarningModal() {
       document.getElementById("warningModal").classList.add("hidden");
     }
 
-    // 履歴のレンダリング
     function renderHistory() {
       const listEl = document.getElementById("historyList");
       listEl.innerHTML = "";
 
-      if (window.appState.logs.length === 0) {
+      if (!window.appState.logs || window.appState.logs.length === 0) {
         listEl.innerHTML = `
           <div class="text-center py-6 text-slate-400 font-bold text-xs">
             まだきろくがありません。ポイントをためてみよう！
@@ -681,22 +621,22 @@
         const date = new Date(log.timestamp);
         const timeStr = `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
         
-        const isAdd = log.type === "add" || log.points > 0;
+        const isAdd = log.points > 0;
         const icon = isAdd ? "➕" : "🎁";
         const badgeColor = isAdd ? "bg-emerald-100 text-emerald-800 border-emerald-200" : "bg-rose-100 text-rose-800 border-rose-200";
         const pointText = isAdd ? `+${log.points} P` : `${log.points} P`;
 
         const logItem = document.createElement("div");
-        logItem.className = `flex items-center justify-between p-2 border border-slate-100 rounded-xl bg-slate-50/70 shrink-0`;
+        logItem.className = `flex items-center justify-between p-2 border rounded-xl bg-slate-50 border-slate-100`;
         logItem.innerHTML = `
           <div class="flex items-center space-x-2">
-            <span class="text-xl">${icon}</span>
+            <span class="text-base">${icon}</span>
             <div class="text-left">
-              <p class="font-black text-xs text-slate-700 leading-tight">${log.text}</p>
-              <p class="text-[9px] text-slate-400 font-bold">${timeStr}</p>
+              <p class="font-black text-[10px] text-slate-700 leading-tight">${log.text}</p>
+              <p class="text-[8px] text-slate-400 font-bold leading-none mt-0.5">${timeStr}</p>
             </div>
           </div>
-          <span class="px-2 py-0.5 border rounded-full font-black text-xs ${badgeColor}">
+          <span class="px-2 py-0.5 border rounded-full font-black text-[9px] ${badgeColor}">
             ${pointText}
           </span>
         `;
@@ -712,19 +652,18 @@
       document.getElementById("roomModal").classList.add("hidden");
     }
 
-    // 音量切り替え
     function toggleSound() {
       window.appState.soundEnabled = !window.appState.soundEnabled;
       const icon = document.getElementById("soundIcon");
       if (window.appState.soundEnabled) {
-        icon.className = "fa-solid fa-volume-high text-amber-500 text-xs";
+        icon.className = "fa-solid fa-volume-high text-amber-500";
         playSynthSuccess();
       } else {
-        icon.className = "fa-solid fa-volume-xmark text-slate-400 text-xs";
+        icon.className = "fa-solid fa-volume-xmark text-slate-400";
       }
     }
 
-    // ================= 音声生成（Web Audio API） =================
+    // ================= 音声エンジン =================
     let audioCtx = null;
 
     function getAudioContext() {
@@ -743,26 +682,20 @@
         if (amount === 1) playSynth1P();
         else if (amount === 5) playSynth5P();
         else if (amount === 10) playSynth10P();
-      } catch (e) {
-        console.log("Audio play failed", e);
-      }
+      } catch (e) {}
     }
 
     function playSynth1P() {
       const ctx = getAudioContext();
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-
       osc.type = "sine";
-      osc.frequency.setValueAtTime(600, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.08);
-
+      osc.frequency.setValueAtTime(650, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1300, ctx.currentTime + 0.1);
       gain.gain.setValueAtTime(0.12, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-
       osc.connect(gain);
       gain.connect(ctx.destination);
-
       osc.start();
       osc.stop(ctx.currentTime + 0.1);
     }
@@ -770,7 +703,6 @@
     function playSynth5P() {
       const ctx = getAudioContext();
       const now = ctx.currentTime;
-      
       const playTone = (freq, start, duration) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
@@ -783,19 +715,17 @@
         osc.start(start);
         osc.stop(start + duration);
       };
-
-      playTone(523.25, now, 0.07);
-      playTone(659.25, now + 0.07, 0.12);
+      playTone(550, now, 0.08);
+      playTone(700, now + 0.08, 0.12);
     }
 
     function playSynth10P() {
       const ctx = getAudioContext();
       const now = ctx.currentTime;
-
       const playTone = (freq, start, duration) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.type = "triangle";
+        osc.type = "sine";
         osc.frequency.setValueAtTime(freq, start);
         gain.gain.setValueAtTime(0.1, start);
         gain.gain.exponentialRampToValueAtTime(0.01, start + duration);
@@ -804,11 +734,10 @@
         osc.start(start);
         osc.stop(start + duration);
       };
-
-      playTone(523.25, now, 0.08);
-      playTone(659.25, now + 0.07, 0.08);
-      playTone(783.99, now + 0.14, 0.08);
-      playTone(1046.50, now + 0.21, 0.25);
+      playTone(523, now, 0.08);
+      playTone(659, now + 0.06, 0.08);
+      playTone(783, now + 0.12, 0.08);
+      playTone(1046, now + 0.18, 0.25);
     }
 
     function playSynthSpend() {
@@ -817,42 +746,33 @@
         const ctx = getAudioContext();
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-
-        osc.type = "sawtooth";
-        osc.frequency.setValueAtTime(700, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + 0.25);
-
-        gain.gain.setValueAtTime(0.08, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
-
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(800, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(250, ctx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
         osc.connect(gain);
         gain.connect(ctx.destination);
-
         osc.start();
-        osc.stop(ctx.currentTime + 0.25);
+        osc.stop(ctx.currentTime + 0.2);
       } catch (e) {}
     }
 
-    // もどすボタン専用音（キュルッという巻き戻り上昇音）
     function playSynthUndo() {
       if (!window.appState.soundEnabled) return;
       try {
         const ctx = getAudioContext();
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-
         osc.type = "sine";
-        osc.frequency.setValueAtTime(800, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.15);
-
+        osc.frequency.setValueAtTime(300, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.12);
         gain.gain.setValueAtTime(0.08, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
-
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12);
         osc.connect(gain);
         gain.connect(ctx.destination);
-
         osc.start();
-        osc.stop(ctx.currentTime + 0.15);
+        osc.stop(ctx.currentTime + 0.12);
       } catch (e) {}
     }
 
@@ -863,8 +783,8 @@
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = "sine";
-        osc.frequency.setValueAtTime(440, ctx.currentTime);
-        gain.gain.setValueAtTime(0.04, ctx.currentTime);
+        osc.frequency.setValueAtTime(450, ctx.currentTime);
+        gain.gain.setValueAtTime(0.05, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.06);
         osc.connect(gain);
         gain.connect(ctx.destination);
@@ -881,13 +801,12 @@
         const gain = ctx.createGain();
         osc.type = "sawtooth";
         osc.frequency.setValueAtTime(140, ctx.currentTime);
-        osc.frequency.setValueAtTime(135, ctx.currentTime + 0.08);
         gain.gain.setValueAtTime(0.1, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.18);
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start();
-        osc.stop(ctx.currentTime + 0.2);
+        osc.stop(ctx.currentTime + 0.18);
       } catch (e) {}
     }
 
@@ -895,25 +814,20 @@
       if (!window.appState.soundEnabled) return;
       try {
         const ctx = getAudioContext();
-        const now = ctx.currentTime;
-        const playTone = (freq, start, dur) => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = "sine";
-          osc.frequency.setValueAtTime(freq, start);
-          gain.gain.setValueAtTime(0.08, start);
-          gain.gain.exponentialRampToValueAtTime(0.01, start + dur);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(start);
-          osc.stop(start + dur);
-        };
-        playTone(523, now, 0.08);
-        playTone(783, now + 0.07, 0.15);
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(600, ctx.currentTime);
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.12);
       } catch (e) {}
     }
 
-    // ================= 2Dパーティクルエンジン（Canvas） =================
+    // ================= パーティクル =================
     const canvas = document.getElementById("particleCanvas");
     const ctx = canvas.getContext("2d");
     let particles = [];
@@ -930,43 +844,36 @@
     }
 
     class Particle {
-      constructor(x, y, isSpend = false, isUndo = false) {
+      constructor(x, y, mode = 'add') {
         this.x = x;
         this.y = y;
-        this.size = Math.random() * 12 + 6;
+        this.size = Math.random() * 10 + 5;
         const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 6 + 3;
+        const speed = Math.random() * 5 + 2.5;
         this.vx = Math.cos(angle) * speed;
-        this.vy = Math.sin(angle) * speed - 1.5; 
-        
-        if (isUndo) {
-          this.color = '#94a3b8'; // もどす時はグレーの煙
-        } else {
-          this.color = isSpend ? this.getRandomSpendColor() : this.getRandomBrightColor();
-        }
-        
+        this.vy = Math.sin(angle) * speed - 1.2;
         this.alpha = 1;
-        this.decay = Math.random() * 0.025 + 0.018;
-        this.gravity = 0.12;
+        this.decay = Math.random() * 0.025 + 0.02;
+        this.gravity = 0.1;
         this.rotation = Math.random() * 360;
         this.rotationSpeed = Math.random() * 4 - 2;
-        this.shape = (isUndo) ? 'circle' : (Math.random() > 0.4 ? 'star' : 'circle');
-      }
-
-      getRandomBrightColor() {
-        const colors = ['#FFC0CB', '#FFD700', '#00FA9A', '#00BFFF', '#FF69B4', '#ADFF2F', '#FF8C00'];
-        return colors[Math.floor(Math.random() * colors.length)];
-      }
-
-      getRandomSpendColor() {
-        const colors = ['#FF4500', '#FF1493', '#DA70D6', '#BA55D3', '#FF6347'];
-        return colors[Math.floor(Math.random() * colors.length)];
+        
+        if (mode === 'add') {
+          this.color = ['#FFC0CB', '#FFD700', '#00FA9A', '#00BFFF', '#FF69B4', '#FF8C00'][Math.floor(Math.random() * 6)];
+          this.shape = Math.random() > 0.4 ? 'star' : 'circle';
+        } else if (mode === 'undo') {
+          this.color = '#94a3b8';
+          this.shape = 'star';
+        } else {
+          this.color = ['#FF4500', '#FF1493', '#DA70D6', '#FF6347'][Math.floor(Math.random() * 4)];
+          this.shape = 'circle';
+        }
       }
 
       update() {
         this.x += this.vx;
         this.y += this.vy;
-        this.vy += this.gravity; 
+        this.vy += this.gravity;
         this.alpha -= this.decay;
         this.rotation += this.rotationSpeed;
       }
@@ -983,8 +890,8 @@
           for (let i = 0; i < 5; i++) {
             ctx.lineTo(Math.cos(((18 + i * 72) * Math.PI) / 180) * this.size,
                        -Math.sin(((18 + i * 72) * Math.PI) / 180) * this.size);
-            ctx.lineTo(Math.cos(((54 + i * 72) * Math.PI) / 180) * (this.size / 2),
-                       -Math.sin(((54 + i * 72) * Math.PI) / 180) * (this.size / 2));
+            ctx.lineTo(Math.cos(((54 + i * 72) * Math.PI) / 180) * (this.size / 2.5),
+                       -Math.sin(((54 + i * 72) * Math.PI) / 180) * (this.size / 2.5));
           }
           ctx.closePath();
           ctx.fill();
@@ -998,39 +905,33 @@
     }
 
     function spawnParticles(x, y) {
-      for (let i = 0; i < 20; i++) {
-        particles.push(new Particle(x, y, false));
+      for (let i = 0; i < 18; i++) {
+        particles.push(new Particle(x, y, 'add'));
       }
     }
 
     function spawnSpendParticles(x, y) {
-      for (let i = 0; i < 25; i++) {
-        const p = new Particle(x, y, true);
-        p.shape = 'circle'; 
-        particles.push(p);
+      for (let i = 0; i < 18; i++) {
+        particles.push(new Particle(x, y, 'spend'));
       }
     }
 
     function spawnUndoParticles(x, y) {
-      for (let i = 0; i < 15; i++) {
-        const p = new Particle(x, y, false, true);
-        particles.push(p);
+      for (let i = 0; i < 12; i++) {
+        particles.push(new Particle(x, y, 'undo'));
       }
     }
 
     function particleLoop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.update();
         p.draw();
-        
         if (p.alpha <= 0) {
           particles.splice(i, 1);
         }
       }
-      
       requestAnimationFrame(particleLoop);
     }
   </script>
