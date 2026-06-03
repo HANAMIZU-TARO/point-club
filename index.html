@@ -4,49 +4,79 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>キラキラ！ぽいんとハウス</title>
-  <!-- Tailwind CSS -->
+  
+  <!-- ライブラリの読み込み -->
+  <!-- Tailwind CSS: スピーディで柔軟なモダンレイアウト設計用 -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome (可愛いアイコン用) -->
+  <!-- FontAwesome: ポップで楽しい各種アイコンの描画用 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Google Fonts -->
+  <!-- Google Fonts: 親しみやすく丸みのある日本語・英数字フォント -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&family=M+PLUS+Rounded+1C:wght@500;700;900&display=swap" rel="stylesheet">
   
   <style>
     :root {
+      /* デバイスの安全領域（インカメラやホームバー）への対応 */
       --sat: env(safe-area-inset-top);
       --sab: env(safe-area-inset-bottom);
     }
+    
+    /* --------------------------------------------------
+       人間工学に基づいた操作性向上（ダブルタップズームとテキスト選択の防止）
+       -------------------------------------------------- */
+    * {
+      /* タップ時の青い半透明ハイライトを消す */
+      -webkit-tap-highlight-color: transparent;
+      /* 子供が連打したときにテキストやアイコンが青く選択されないようにする */
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
     body {
       font-family: 'M PLUS Rounded 1C', sans-serif;
-      -webkit-tap-highlight-color: transparent;
       padding-top: var(--sat);
       padding-bottom: var(--sab);
+      /* スクロールを完全に禁止して1画面に収める */
+      overflow: hidden;
+      touch-action: none;
     }
+
     .logo-font {
       font-family: 'Cherry Bomb One', cursive;
     }
-    /* ぷっくり3Dボタン（人間工学に基づいたタップ感・コンパクトサイズ） */
+
+    /* --------------------------------------------------
+       ボタンのデザイン（ぷっくり3Dエフェクト）
+       -------------------------------------------------- */
     .btn-3d {
       position: relative;
       transition: transform 0.05s ease, box-shadow 0.05s ease;
-      box-shadow: 0 4px 0 var(--shadow-color);
+      box-shadow: 0 5px 0 var(--shadow-color);
+      /* iOS Safariで連打した際にダブルタップズームされるのを防ぐ */
+      touch-action: manipulation;
     }
+    
+    /* 押された瞬間に少し下に沈み込む */
     .btn-3d:active {
-      transform: translateY(3px);
+      transform: translateY(3px) !important;
+      box-shadow: 0 2px 0 var(--shadow-color) !important;
+    }
+
+    /* もどすボタン・増減ボタン用の小さな3D効果 */
+    .btn-small-3d {
+      position: relative;
+      transition: transform 0.05s ease, box-shadow 0.05s ease;
+      box-shadow: 0 3px 0 var(--shadow-color);
+      touch-action: manipulation;
+    }
+    .btn-small-3d:active {
+      transform: translateY(2px);
       box-shadow: 0 1px 0 var(--shadow-color);
     }
-    /* もどすボタン用の小さな3D効果 */
-    .btn-undo {
-      transition: transform 0.05s ease, box-shadow 0.05s ease;
-      box-shadow: 0 3px 0 #cbd5e1;
-    }
-    .btn-undo:active {
-      transform: translateY(2px);
-      box-shadow: 0 1px 0 #cbd5e1;
-    }
-    /* ふわふわ動く可愛いアニメーション */
+
+    /* ふわふわ浮く可愛いバックグラウンド用アニメーション */
     @keyframes float {
       0%, 100% { transform: translateY(0px) rotate(0deg); }
       50% { transform: translateY(-4px) rotate(1deg); }
@@ -54,6 +84,7 @@
     .float-animation {
       animation: float 3.5s ease-in-out infinite;
     }
+
     /* タブ切り替えのフェードイン */
     .tab-content {
       display: none;
@@ -69,32 +100,36 @@
     }
   </style>
 </head>
-<body class="bg-amber-50 text-slate-700 h-dvh flex flex-col justify-between overflow-hidden select-none">
+<body class="bg-amber-50 text-slate-700 h-dvh flex flex-col justify-between select-none">
 
-  <!-- パーティクル用キャンバス（画面全体にきれいに散るように最前面に配置） -->
+  <!-- ==================================================
+       パーティクル用キャンバス（画面全体に散るよう最前面に配置）
+       ================================================== -->
   <canvas id="particleCanvas" class="fixed top-0 left-0 w-full h-full pointer-events-none z-50"></canvas>
 
-  <!-- ヘッダー (極限までコンパクト化して表示スペースを広く確保) -->
-  <header class="bg-white border-b-2 border-yellow-300 px-4 py-1.5 flex-shrink-0 shadow-sm">
+  <!-- ==================================================
+       ヘッダー（全体のバランスを整えるコンパクトサイズ）
+       ================================================== -->
+  <header class="bg-white border-b-2 border-yellow-300 px-4 py-2 flex-shrink-0 shadow-sm">
     <div class="max-w-md mx-auto flex justify-between items-center">
-      <!-- 可愛いロゴ -->
-      <div class="flex items-center space-x-1.5">
-        <div class="bg-yellow-400 w-6 h-6 rounded-lg flex items-center justify-center text-white shadow-inner text-xs float-animation">
-          <i class="fa-solid fa-star"></i>
+      <!-- アプリタイトル -->
+      <div class="flex items-center space-x-2">
+        <div class="bg-yellow-400 w-7 h-7 rounded-lg flex items-center justify-center text-white shadow-inner text-xs float-animation">
+          <i class="fa-solid fa-star animate-pulse"></i>
         </div>
         <div>
-          <h1 class="logo-font text-lg text-amber-500 tracking-wide leading-none">ぽいんとハウス</h1>
+          <h1 class="logo-font text-xl text-amber-500 tracking-wide leading-none">ぽいんとハウス</h1>
         </div>
       </div>
 
-      <!-- 右側：設定 -->
-      <div class="flex items-center space-x-1.5">
-        <!-- 音切り替え -->
-        <button id="soundToggleBtn" onclick="toggleSound()" class="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center border border-slate-200 text-slate-400 hover:bg-slate-100 transition-colors">
-          <i id="soundIcon" class="fa-solid fa-volume-high text-xs"></i>
+      <!-- 右側オプション設定 -->
+      <div class="flex items-center space-x-2">
+        <!-- サウンド切り替えボタン -->
+        <button id="soundToggleBtn" onclick="toggleSound()" class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center border border-slate-200 text-slate-400 hover:bg-slate-100 transition-colors">
+          <i id="soundIcon" class="fa-solid fa-volume-high text-xs text-amber-500"></i>
         </button>
-        <!-- おうちコード確認用バッジ -->
-        <div id="roomBadge" onclick="openRoomModal()" class="bg-slate-100 hover:bg-slate-200 cursor-pointer border border-slate-200 px-2 py-0.5 rounded-full flex items-center space-x-1 text-[10px]">
+        <!-- おうちコード（12345が自動設定されます） -->
+        <div id="roomBadge" onclick="openRoomModal()" class="bg-slate-100 hover:bg-slate-200 cursor-pointer border border-slate-200 px-2.5 py-1 rounded-full flex items-center space-x-1 text-[10px]">
           <span class="font-bold text-slate-500">おうちID:</span>
           <span id="roomCodeDisplay" class="font-black text-slate-700 tracking-wider">------</span>
         </div>
@@ -102,10 +137,12 @@
     </div>
   </header>
 
-  <!-- メイン表示領域（デバイスの高さに合わせて完璧に伸縮） -->
-  <main class="flex-grow max-w-md w-full mx-auto px-4 py-2 flex flex-col justify-between overflow-hidden">
+  <!-- ==================================================
+       メイン領域（高さを自動計算して縦スクロールを防ぐ）
+       ================================================== -->
+  <main class="flex-grow max-w-md w-full mx-auto px-4 py-2.5 flex flex-col justify-between overflow-hidden">
     
-    <!-- ================= 1. おうちコード入力画面（通常は自動スキップ） ================= -->
+    <!-- おうちコード入力画面（通常は自動で12345ログインされますが、変更時に表示） -->
     <div id="roomSetupScreen" class="hidden bg-white border-4 border-yellow-300 rounded-3xl p-5 shadow-xl text-center my-auto flex flex-col space-y-4">
       <div class="text-5xl float-animation">🏡</div>
       <div>
@@ -124,123 +161,133 @@
       </button>
     </div>
 
-    <!-- ================= 2. メイン画面（起動時に一瞬で表示されます） ================= -->
-    <div id="mainAppScreen" class="hidden flex-grow flex flex-col justify-between space-y-2 overflow-hidden">
+    <!-- アプリ本体画面 -->
+    <div id="mainAppScreen" class="hidden flex-grow flex flex-col justify-between space-y-2.5 overflow-hidden">
       
-      <!-- メインポイント表示盤（ポイント数を圧倒的サイズに拡大！） -->
+      <!-- 👑 メインポイント表示盤（ポイント数字を大迫力に！） -->
       <div class="bg-gradient-to-br from-amber-400 via-yellow-300 to-amber-300 border-2 border-white rounded-2xl p-3 shadow-md relative overflow-hidden flex-shrink-0">
-        <div class="absolute -top-4 -left-4 text-white/25 text-5xl font-black pointer-events-none">⭐</div>
-        <p class="text-white font-black text-[11px] text-center tracking-wider drop-shadow-sm leading-none">いま たまっている ぽいんと</p>
+        <div class="absolute -top-4 -left-4 text-white/20 text-6xl font-black pointer-events-none">⭐</div>
+        <p class="text-white font-black text-xs text-center tracking-wider drop-shadow-sm leading-none">いま たまっている ぽいんと</p>
         
-        <div class="flex items-center justify-between px-1 mt-1">
-          <!-- 左側：圧倒的に大きなポイント表示 -->
-          <div class="flex items-center space-x-1.5">
+        <div class="flex items-center justify-between px-1 mt-1.5">
+          <!-- 左側：特大ポイント -->
+          <div class="flex items-center space-x-2">
             <span class="text-white text-3xl drop-shadow-md animate-bounce-slow"><i class="fa-solid fa-crown text-amber-100"></i></span>
             <div class="flex items-baseline">
-              <!-- テキストサイズをさらに大きく目立たせる（text-5xl→text-6xl md:text-7xl） -->
               <span id="totalPoints" class="text-6xl md:text-7xl font-black text-white tracking-tighter drop-shadow-[0_4px_0_rgba(217,119,6,1)]">0</span>
               <span class="text-amber-950 font-black text-sm ml-1"> P</span>
-              <span class="text-amber-900/80 text-[10px] font-black ml-2 bg-white/50 px-2 py-0.5 rounded-lg border border-amber-200">1円</span>
+              <span class="text-amber-900/80 text-[10px] font-black ml-2 bg-white/60 px-2 py-0.5 rounded-lg border border-amber-200/50">1P = 1円</span>
             </div>
           </div>
           
-          <!-- 右側：「1こもどす」ボタン -->
-          <button onclick="undoLastAction(event)" class="btn-undo bg-slate-100 hover:bg-slate-200 text-slate-600 px-2.5 py-1.5 rounded-xl text-[11px] font-black flex items-center space-x-1 border border-slate-300">
+          <!-- 右側：間違えて押しちゃった時用の「もどす」ボタン -->
+          <button onclick="undoLastAction(event)" style="--shadow-color: #94a3b8" class="btn-small-3d bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-xl text-xs font-black flex items-center space-x-1 border border-slate-300">
             <i class="fa-solid fa-rotate-left"></i>
             <span>もどす</span>
           </button>
         </div>
       </div>
 
-      <!-- 切り替えタブ -->
+      <!-- 切り替えタブ（ぽいんと と きろく のシンプルな2タブに変更） -->
       <div class="flex bg-amber-100/60 p-1 rounded-xl border border-amber-200/60 flex-shrink-0">
-        <button onclick="switchTab('earn')" id="tabBtn-earn" class="flex-1 py-1.5 text-center rounded-lg text-xs font-black transition-all text-amber-900 bg-white shadow-sm">
-          <i class="fa-solid fa-circle-plus mr-1"></i> ためにいく
+        <button onclick="switchTab('main-operation')" id="tabBtn-main-operation" class="flex-1 py-2 text-center rounded-lg text-xs font-black transition-all text-amber-900 bg-white shadow-sm">
+          <i class="fa-solid fa-house-user mr-1"></i> おうち ぽいんと
         </button>
-        <button onclick="switchTab('spend')" id="tabBtn-spend" class="flex-1 py-1.5 text-center rounded-lg text-xs font-black transition-all text-slate-500 hover:text-slate-800">
-          <i class="fa-solid fa-wallet mr-1"></i> つかう
-        </button>
-        <button onclick="switchTab('history')" id="tabBtn-history" class="flex-1 py-1.5 text-center rounded-lg text-xs font-black transition-all text-slate-500 hover:text-slate-800">
-          <i class="fa-solid fa-clock-rotate-left mr-1"></i> きろく
+        <button onclick="switchTab('history')" id="tabBtn-history" class="flex-1 py-2 text-center rounded-lg text-xs font-black transition-all text-slate-500 hover:text-slate-800">
+          <i class="fa-solid fa-clock-rotate-left mr-1"></i> きろく（りれき）
         </button>
       </div>
 
-      <!-- コンテンツエリア -->
+      <!-- 各コンテンツ表示エリア -->
       <div class="flex-grow overflow-hidden relative flex flex-col justify-center">
         
-        <!-- 【ためるタブ】ボタンのサイズを人間工学に基きキュート＆コンパクト（h-28）に縮小！ -->
-        <div id="tabContent-earn" class="tab-content active h-full justify-center">
-          <div class="grid grid-cols-3 gap-3.5 w-full my-auto">
-            
-            <!-- タッチ (1P) -->
-            <button onclick="addPoints(1, 'タッチしたよ！ 👈', event)" style="--shadow-color: #0d9488" 
-                    class="btn-3d bg-emerald-400 hover:bg-emerald-300 text-white rounded-2xl p-2 flex flex-col items-center justify-between h-28 border-b-[4px] border-emerald-600">
-              <span class="text-2xl mt-1">👈</span>
-              <div class="text-center w-full mb-1">
-                <span class="block font-black text-[11px] leading-none tracking-tighter text-emerald-50">タッチ</span>
-                <span class="inline-block bg-emerald-600/30 px-2 py-0.5 rounded-full text-[9px] font-black mt-1 leading-none">+1 P</span>
-              </div>
-            </button>
-
-            <!-- マッサージ (5P) -->
-            <button onclick="addPoints(5, 'マッサージをしたよ 💆', event)" style="--shadow-color: #b45309" 
-                    class="btn-3d bg-amber-500 hover:bg-amber-400 text-white rounded-2xl p-2 flex flex-col items-center justify-between h-28 border-b-[4px] border-amber-700">
-              <span class="text-2xl mt-1">💆</span>
-              <div class="text-center w-full mb-1">
-                <span class="block font-black text-[11px] leading-none tracking-tighter text-amber-50">マッサージ</span>
-                <span class="inline-block bg-amber-700/30 px-2 py-0.5 rounded-full text-[9px] font-black mt-1 leading-none">+5 P</span>
-              </div>
-            </button>
-
-            <!-- お手伝い (10P) -->
-            <button onclick="addPoints(10, 'おてつだいをしたよ 🧹', event)" style="--shadow-color: #db2777" 
-                    class="btn-3d bg-pink-500 hover:bg-pink-400 text-white rounded-2xl p-2 flex flex-col items-center justify-between h-28 border-b-[4px] border-pink-700">
-              <span class="text-2xl mt-1">🧹</span>
-              <div class="text-center w-full mb-1">
-                <span class="block font-black text-[11px] leading-none tracking-tighter text-pink-50">おてつだい</span>
-                <span class="inline-block bg-pink-700/30 px-2 py-0.5 rounded-full text-[9px] font-black mt-1 leading-none">+10 P</span>
-              </div>
-            </button>
-            
-          </div>
-        </div>
-
-        <!-- 【つかうタブ】1円=1P その場入力フォーム -->
-        <div id="tabContent-spend" class="tab-content h-full justify-center">
-          <div class="bg-white border border-yellow-200 rounded-2xl p-3.5 shadow-inner w-full max-h-48 my-auto flex flex-col justify-between">
-            <h3 class="text-[11px] font-black text-amber-700 text-center mb-1.5">🎁 たまったポイントをつかう（1円 ＝ 1P）</h3>
-            
-            <div class="space-y-1.5">
-              <div class="flex space-x-2">
-                <div class="w-1/3">
-                  <label class="block text-[9px] font-bold text-slate-400 mb-0.5">いくら？</label>
-                  <div class="relative">
-                    <input type="number" id="spendAmount" min="1" placeholder="50" inputmode="numeric" pattern="[0-9]*"
-                           class="w-full text-center text-sm font-black bg-amber-50 border border-amber-200 focus:border-amber-400 focus:outline-none rounded-xl py-1 text-amber-800 pr-5">
-                    <span class="absolute right-2 top-1/2 transform -translate-y-1/2 text-[9px] font-bold text-amber-600">円</span>
-                  </div>
+        <!-- ==================================================
+             【おうち ぽいんとタブ（ためる・つかうを1画面に同居）】
+             縦画面にすっきり収まるよう、それぞれの高さを人間工学的に調整！
+             ================================================== -->
+        <div id="tabContent-main-operation" class="tab-content active h-full justify-between space-y-2">
+          
+          <!-- 1. ためにいくエリア（上部：縦幅をコンパクトにした3つのボタン） -->
+          <div class="flex flex-col space-y-1 flex-shrink-0">
+            <span class="block text-[10px] font-black text-slate-400 tracking-wider"><i class="fa-solid fa-circle-plus text-emerald-500 mr-1"></i>ぽいんとをためる</span>
+            <div class="grid grid-cols-3 gap-2.5 w-full">
+              
+              <!-- タッチ (1P) -->
+              <button id="btnEarn-touch" style="--shadow-color: #0d9488" 
+                      class="btn-3d bg-emerald-400 hover:bg-emerald-300 text-white rounded-xl p-1.5 flex flex-col items-center justify-between h-24 border-b-[4px] border-emerald-600">
+                <span class="text-2xl mt-1 select-none">👈</span>
+                <div class="text-center w-full mb-0.5">
+                  <span class="block font-black text-[10px] leading-none tracking-tight text-emerald-50">タッチ</span>
+                  <span class="inline-block bg-emerald-600/30 px-1.5 py-0.5 rounded-full text-[9px] font-black mt-0.5 leading-none">+1 P</span>
                 </div>
-                <div class="w-2/3">
-                  <label class="block text-[9px] font-bold text-slate-400 mb-0.5">なににつかう？</label>
-                  <input type="text" id="spendReason" placeholder="例: おやつとこうかん"
-                         class="w-full text-center text-xs font-bold bg-amber-50 border border-amber-200 focus:border-amber-400 focus:outline-none rounded-xl py-1 text-amber-800">
-                </div>
-              </div>
-
-              <button onclick="submitSpend(event)" style="--shadow-color: #b45309"
-                      class="btn-3d w-full bg-amber-500 hover:bg-amber-400 text-white rounded-xl font-black text-xs border-b-4 border-amber-700 py-1.5 mt-2">
-                ポイントをつかう！ 🎁
               </button>
+
+              <!-- マッサージ (5P) -->
+              <button id="btnEarn-massage" style="--shadow-color: #b45309" 
+                      class="btn-3d bg-amber-500 hover:bg-amber-400 text-white rounded-xl p-1.5 flex flex-col items-center justify-between h-24 border-b-[4px] border-amber-700">
+                <span class="text-2xl mt-1 select-none">💆</span>
+                <div class="text-center w-full mb-0.5">
+                  <span class="block font-black text-[10px] leading-none tracking-tight text-amber-50">マッサージ</span>
+                  <span class="inline-block bg-amber-700/30 px-1.5 py-0.5 rounded-full text-[9px] font-black mt-0.5 leading-none">+5 P</span>
+                </div>
+              </button>
+
+              <!-- お手伝い (10P) -->
+              <button id="btnEarn-cleaning" style="--shadow-color: #db2777" 
+                      class="btn-3d bg-pink-500 hover:bg-pink-400 text-white rounded-xl p-1.5 flex flex-col items-center justify-between h-24 border-b-[4px] border-pink-700">
+                <span class="text-2xl mt-1 select-none">🧹</span>
+                <div class="text-center w-full mb-0.5">
+                  <span class="block font-black text-[10px] leading-none tracking-tight text-pink-50">おてつだい</span>
+                  <span class="inline-block bg-pink-700/30 px-1.5 py-0.5 rounded-full text-[9px] font-black mt-0.5 leading-none">+10 P</span>
+                </div>
+              </button>
+              
             </div>
           </div>
+
+          <!-- 2. つかうエリア（下部：キーボードを一切開かず矢印ボタンだけで完結！） -->
+          <div class="bg-white border-2 border-yellow-200 rounded-2xl p-3 shadow-inner w-full flex flex-col justify-between space-y-2 flex-grow">
+            <div class="text-left leading-none">
+              <span class="block text-[10px] font-black text-slate-400 tracking-wider"><i class="fa-solid fa-wallet text-amber-500 mr-1"></i>ぽいんとをつかう</span>
+            </div>
+            
+            <div class="flex items-center justify-between bg-amber-50/50 border border-amber-200 rounded-xl p-1.5">
+              <!-- 調整用ボタン：マイナス側 -->
+              <div class="flex space-x-1">
+                <button onclick="adjustSpendValue(-10)" style="--shadow-color: #cbd5e1" class="btn-small-3d bg-slate-100 text-slate-700 w-10 h-10 rounded-lg font-black text-xs border border-slate-300">-10</button>
+                <button onclick="adjustSpendValue(-1)" style="--shadow-color: #cbd5e1" class="btn-small-3d bg-slate-100 text-slate-700 w-10 h-10 rounded-lg font-black text-sm border border-slate-300">-1</button>
+              </div>
+
+              <!-- 消費希望ポイント（キーボードは絶対に起動しません） -->
+              <div class="text-center px-1 flex-grow">
+                <span id="spendDisplay" class="text-3xl font-black text-amber-600">10</span>
+                <span class="text-xs font-black text-slate-400 ml-0.5">えん</span>
+              </div>
+
+              <!-- 調整用ボタン：プラス側 -->
+              <div class="flex space-x-1">
+                <button onclick="adjustSpendValue(1)" style="--shadow-color: #cbd5e1" class="btn-small-3d bg-slate-100 text-slate-700 w-10 h-10 rounded-lg font-black text-sm border border-slate-300">+1</button>
+                <button onclick="adjustSpendValue(10)" style="--shadow-color: #cbd5e1" class="btn-small-3d bg-slate-100 text-slate-700 w-10 h-10 rounded-lg font-black text-xs border border-slate-300">+10</button>
+              </div>
+            </div>
+
+            <!-- つかう実行ボタン -->
+            <button onclick="submitSpend(event)" style="--shadow-color: #b45309"
+                    class="btn-3d w-full bg-amber-500 hover:bg-amber-400 text-white rounded-xl font-black text-sm border-b-[5px] border-amber-700 py-2.5">
+              このぽいんとをつかう！ 🎁
+            </button>
+          </div>
+
         </div>
 
-        <!-- 【きろくタブ】スクロール可能な履歴リスト -->
+        <!-- ==================================================
+             【きろくタブ】スクロール可能なかわいい履歴リスト
+             ================================================== -->
         <div id="tabContent-history" class="tab-content h-full justify-start overflow-hidden">
-          <div class="bg-white border border-yellow-200 rounded-2xl p-2.5 shadow-inner h-full overflow-y-auto max-h-48">
+          <div class="bg-white border-2 border-yellow-200 rounded-2xl p-2.5 shadow-inner h-full overflow-y-auto max-h-[300px]">
             <div id="historyList" class="space-y-1.5">
-              <!-- 履歴 -->
-              <div class="text-center py-6 text-slate-400 font-bold text-xs">
+              <!-- 履歴データが動的に挿入されます -->
+              <div class="text-center py-8 text-slate-400 font-bold text-xs">
                 まだきろくがありません。ポイントをためてみよう！
               </div>
             </div>
@@ -253,14 +300,18 @@
 
   </main>
 
-  <!-- フッター -->
-  <footer class="bg-slate-100 border-t border-slate-200 py-1 text-center flex-shrink-0">
-    <p class="text-[8px] text-slate-400 font-bold">
+  <!-- ==================================================
+       フッター（最下部スペースを抑え、画面の収まりを綺麗に）
+       ================================================== -->
+  <footer class="bg-slate-100 border-t border-slate-200 py-1.5 text-center flex-shrink-0">
+    <p class="text-[9px] text-slate-400 font-bold">
       © キラキラ！ぽいんとハウス
     </p>
   </footer>
 
-  <!-- ================= モーダル群 ================= -->
+  <!-- ==================================================
+       モーダルダイアログ
+       ================================================== -->
 
   <!-- おうちコード変更・確認 -->
   <div id="roomModal" class="fixed inset-0 bg-black/60 z-40 hidden flex items-center justify-center p-4">
@@ -304,12 +355,16 @@
     </div>
   </div>
 
-  <!-- ================= JavaScript (自動初期化 & 100%ローカル保存担保版) ================= -->
+  <!-- ==================================================
+       JavaScript (同期＆自動ログインエンジン)
+       ================================================== -->
   <script type="module">
+    // Firebase SDKの読み込み
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+    // アプリケーションの基本設定値
     const appState = {
       roomId: "",
       points: 0,
@@ -324,12 +379,13 @@
 
     window.appState = appState;
 
-    // Firebaseの起動をチェック
+    // Firebaseの起動確認と接続
     const initFirebase = async () => {
       try {
         const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'kids-point-app';
         appState.appId = appId;
 
+        // グローバルなFirebaseConfigが存在すれば読み込む
         if (typeof window.__firebase_config !== 'undefined' && window.__firebase_config) {
           const firebaseConfig = JSON.parse(window.__firebase_config);
           const app = initializeApp(firebaseConfig);
@@ -359,15 +415,14 @@
       }
     };
 
-    // 自動でおうちコード「12345」を使ってログイン
+    // 自動的におうちコード「12345」でログイン
     const autoLoginRoom = () => {
       const savedRoom = localStorage.getItem("point_house_room_id");
-      // 保存されているおうちコードがなければ、デフォルトの「12345」を強制自動セット！
       const targetRoom = (savedRoom && savedRoom.length === 5) ? savedRoom : "12345";
       startRoomSync(targetRoom);
     };
 
-    // クラウド & ローカル同期
+    // Firebaseとローカルの完全同期エンジン
     const startRoomSync = async (roomId) => {
       appState.roomId = roomId;
       localStorage.setItem("point_house_room_id", roomId);
@@ -375,14 +430,15 @@
       document.getElementById("roomCodeDisplay").innerText = roomId;
       document.getElementById("currentRoomCodeInModal").innerText = roomId;
 
-      // 面倒な初期画面をスキップして、即アプリ起動！
       showScreen("mainAppScreen");
 
       if (appState.unsubscribeRoom) {
         appState.unsubscribeRoom();
       }
 
+      // Firebaseが利用可能な場合はリアルタイム同期
       if (appState.firebaseActive && appState.db) {
+        // /artifacts/{appId}/public/data/rooms/{roomId} の規定パスに保存
         const roomDocRef = doc(appState.db, 'artifacts', appState.appId, 'public', 'data', 'rooms', roomId);
 
         appState.unsubscribeRoom = onSnapshot(roomDocRef, (docSnap) => {
@@ -401,7 +457,7 @@
       }
     };
 
-    // セーブ
+    // クラウド側データアップデート
     const saveDataToCloud = async (roomId, points, logs) => {
       if (appState.firebaseActive && appState.db) {
         const roomDocRef = doc(appState.db, 'artifacts', appState.appId, 'public', 'data', 'rooms', roomId);
@@ -415,10 +471,11 @@
           console.error("Cloud save error:", e);
         }
       }
-      // 何があってもブラウザに強力保存！消えません
+      // バックアップとして端末のローカルストレージにも保存
       localStorage.setItem(`room_data_${roomId}`, JSON.stringify({ points, logs }));
     };
 
+    // オフライン時のローカルデータ読み込み
     const loadLocalBackup = (roomId) => {
       const localData = localStorage.getItem(`room_data_${roomId}`);
       if (localData) {
@@ -433,6 +490,7 @@
       }
     };
 
+    // UIとデータを更新
     const updateLocalData = (points, logs) => {
       appState.points = points;
       appState.logs = logs.sort((a, b) => b.timestamp - a.timestamp);
@@ -440,6 +498,7 @@
       renderHistory();
     };
 
+    // グローバルにバインド
     window.startRoomSync = startRoomSync;
     window.saveDataToCloud = saveDataToCloud;
     window.updateLocalData = updateLocalData;
@@ -450,14 +509,42 @@
     });
   </script>
 
-  <!-- 通常のUI制御スクリプト -->
+  <!-- ==================================================
+       JavaScript (アプリ操作＆オートリピート＆UIロジック)
+       ================================================== -->
   <script>
+    /* ==========================================
+       1. 環境設定・定数パラメータ (コードレビュー用)
+       ========================================== */
+    const CONFIG = {
+      // オートリピート（長押し連続加算）の設定
+      REPEAT_START_DELAY: 500, // 長押し判定時間 (ミリ秒)
+      REPEAT_INTERVAL: 100,    // 高速連打の間隔 (ミリ秒)
+    };
+
+    /* ==========================================
+       2. アプリ全体のシステム・ステート
+       ========================================== */
+    const spendState = {
+      currentValue: 10,  // 現在セットされている消費希望ポイント（初期値10）
+    };
+
+    /* ==========================================
+       3. 起動時＆UI初期設定
+       ========================================== */
+    document.addEventListener("DOMContentLoaded", () => {
+      updateSpendCounterUI();
+      setupLongPressForEarnButtons();
+    });
+
+    // 表示画面切り替え
     function showScreen(screenId) {
       document.getElementById("roomSetupScreen").classList.add("hidden");
       document.getElementById("mainAppScreen").classList.add("hidden");
       document.getElementById(screenId).classList.remove("hidden");
     }
 
+    // おうちID入力接続
     function joinRoom() {
       const input = document.getElementById("roomCodeInput").value.trim();
       if (input.length !== 5 || isNaN(input)) {
@@ -469,6 +556,7 @@
       window.startRoomSync(input);
     }
 
+    // アプリ内通知（トースト）
     function alertInApp(msg) {
       const toast = document.createElement("div");
       toast.className = "fixed bottom-12 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-full text-[11px] font-black shadow-lg z-50 animate-bounce";
@@ -479,6 +567,7 @@
       }, 1500);
     }
 
+    // ルーム初期化
     function logoutRoom() {
       localStorage.removeItem("point_house_room_id");
       window.appState.roomId = "";
@@ -487,6 +576,7 @@
       showScreen("roomSetupScreen");
     }
 
+    // タブ選択の切り替え（おうち ぽいんと と きろく の2系統のみ）
     function switchTab(tabName) {
       document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
       document.querySelectorAll("[id^='tabBtn-']").forEach(el => {
@@ -502,7 +592,70 @@
       playSynthSwitch();
     }
 
-    // ポイントをためる
+
+    /* ==========================================
+       4. 人間工学オートリピート (長押し連続加算) のロジック
+       ========================================== */
+    function setupLongPressForEarnButtons() {
+      const targets = [
+        { id: "btnEarn-touch", amount: 1, label: "タッチしたよ！ 👈" },
+        { id: "btnEarn-massage", amount: 5, label: "マッサージをしたよ 💆" },
+        { id: "btnEarn-cleaning", amount: 10, label: "おてつだいをしたよ 🧹" }
+      ];
+
+      targets.forEach(item => {
+        const btn = document.getElementById(item.id);
+        if (!btn) return;
+
+        let pressTimer = null;
+        let repeatInterval = null;
+        let isPressing = false;
+
+        const startAction = (event) => {
+          if (isPressing) return;
+          isPressing = true;
+          
+          // タップイベント重複や、ズームなどのデフォルト挙動を防止
+          if (event && event.cancelable) event.preventDefault();
+
+          // 1発目のポイント加算を実行
+          addPoints(item.amount, item.label, event);
+
+          // 一定時間（CONFIG.REPEAT_START_DELAY）以上押され続けたら、高速リピート開始
+          pressTimer = setTimeout(() => {
+            repeatInterval = setInterval(() => {
+              // 連打時は画面中央付近からランダムに美しく散らす
+              addPoints(item.amount, item.label, null);
+            }, CONFIG.REPEAT_INTERVAL);
+          }, CONFIG.REPEAT_START_DELAY);
+        };
+
+        const stopAction = () => {
+          isPressing = false;
+          if (pressTimer) clearTimeout(pressTimer);
+          if (repeatInterval) clearInterval(repeatInterval);
+          pressTimer = null;
+          repeatInterval = null;
+        };
+
+        // マウス用イベントハンドラ
+        btn.addEventListener("mousedown", startAction);
+        btn.addEventListener("mouseup", stopAction);
+        btn.addEventListener("mouseleave", stopAction);
+
+        // タッチデバイス（iPad, iPhone）用イベントハンドラ
+        btn.addEventListener("touchstart", startAction, { passive: false });
+        btn.addEventListener("touchend", stopAction);
+        btn.addEventListener("touchcancel", stopAction);
+      });
+    }
+
+
+    /* ==========================================
+       5. ポイントコアロジック (加算・つかう・もどす)
+       ========================================== */
+
+    // ポイントを増やす
     function addPoints(amount, label, event) {
       const currentPoints = window.appState.points;
       const newPoints = currentPoints + amount;
@@ -516,94 +669,115 @@
       };
 
       const updatedLogs = [...window.appState.logs, newLog];
+      
+      // クラウドおよびローカルにセーブ
       window.saveDataToCloud(window.appState.roomId, newPoints, updatedLogs);
       window.updateLocalData(newPoints, updatedLogs);
 
+      // パーティクルの演出
       if (event && event.clientX) {
         spawnParticles(event.clientX, event.clientY);
       } else {
-        spawnParticles(window.innerWidth / 2, window.innerHeight / 2);
+        // 連打時などは、画面中央付近からランダムに美しく散らす
+        spawnParticles(window.innerWidth / 2 + (Math.random() * 40 - 20), window.innerHeight * 0.4);
       }
+
+      // ピコーン効果音
       playAddSound(amount);
     }
 
-    // 1こ戻す (Undo)
-    function undoLastAction(event) {
-      if (!window.appState.logs || window.appState.logs.length === 0) {
-        playSynthError();
-        alertInApp("もどすきろくがありません！");
-        return;
-      }
-
-      const sortedLogs = [...window.appState.logs].sort((a, b) => b.timestamp - a.timestamp);
-      const lastAction = sortedLogs[0];
-      
-      const updatedLogs = window.appState.logs.filter(log => log.id !== lastAction.id);
-      const newPoints = Math.max(0, window.appState.points - lastAction.points);
-
-      window.saveDataToCloud(window.appState.roomId, newPoints, updatedLogs);
-      window.updateLocalData(newPoints, updatedLogs);
-
-      if (event && event.clientX) {
-        spawnUndoParticles(event.clientX, event.clientY);
-      } else {
-        spawnUndoParticles(window.innerWidth / 2, window.innerHeight / 2);
-      }
-      playSynthUndo();
-      alertInApp("1つ前の操作をもどしたよ！");
+    // ダイヤル調整（「つかう」の数値をボタン増減させる、絶対にキーボードが出ない）
+    function adjustSpendValue(diff) {
+      const nextVal = spendState.currentValue + diff;
+      // 1円（1ポイント）以下にはならないように制限
+      spendState.currentValue = Math.max(1, nextVal);
+      updateSpendCounterUI();
+      playSynthSwitch();
     }
 
-    // つかう（1円＝1P）
+    // カウンタ表示のUI更新
+    function updateSpendCounterUI() {
+      document.getElementById("spendDisplay").innerText = spendState.currentValue;
+    }
+
+    // ポイントを消費する（「1ポイント＝1円」の明快な引き算。つかう理由は不要のためカット）
     function submitSpend(event) {
-      const amount = parseInt(document.getElementById("spendAmount").value);
-      let reason = document.getElementById("spendReason").value.trim();
+      const amount = spendState.currentValue;
 
-      if (!amount || amount <= 0) {
-        playSynthError();
-        alertInApp("えん（ポイント）をいれてね！");
-        return;
-      }
-
+      // ポイントが足りない場合は警告モーダル
       if (window.appState.points < amount) {
         playSynthError();
         document.getElementById("warningModal").classList.remove("hidden");
         return;
       }
 
-      if (!reason) {
-        reason = "おかいもの・ごほうび 🎁";
-      }
-
       const currentPoints = window.appState.points;
       const newPoints = currentPoints - amount;
+      
       const newLog = {
         id: crypto.randomUUID(),
-        text: `🎁 ${reason} に ${amount}円つかった`,
+        text: `🎁 ぽいんとを ${amount}円ぶんつかった`,
         points: -amount,
         timestamp: Date.now(),
         type: "spend"
       };
 
       const updatedLogs = [...window.appState.logs, newLog];
+      
       window.saveDataToCloud(window.appState.roomId, newPoints, updatedLogs);
       window.updateLocalData(newPoints, updatedLogs);
 
-      document.getElementById("spendAmount").value = "";
-      document.getElementById("spendReason").value = "";
-
+      // パーティクル散布
       if (event && event.clientX) {
         spawnSpendParticles(event.clientX, event.clientY);
       } else {
         spawnSpendParticles(window.innerWidth / 2, window.innerHeight / 2);
       }
+      
       playSynthSpend();
       alertInApp(`${amount} 円分つかったよ！`);
     }
 
+    // 間違えて押しちゃった場合用の「1こ前の操作をもどす(Undo)」
+    function undoLastAction(event) {
+      if (!window.appState.logs || window.appState.logs.length === 0) {
+        playSynthError();
+        alertInApp("もどす記録がありません！");
+        return;
+      }
+
+      // 最新の記録を取得
+      const sortedLogs = [...window.appState.logs].sort((a, b) => b.timestamp - a.timestamp);
+      const lastAction = sortedLogs[0];
+      
+      // その最新ログを取り除く
+      const updatedLogs = window.appState.logs.filter(log => log.id !== lastAction.id);
+      // ポイントを巻き戻し演算（負の値にならないようガード）
+      const newPoints = Math.max(0, window.appState.points - lastAction.points);
+
+      window.saveDataToCloud(window.appState.roomId, newPoints, updatedLogs);
+      window.updateLocalData(newPoints, updatedLogs);
+
+      // 巻き戻しパーティクル（グレーの星）
+      if (event && event.clientX) {
+        spawnUndoParticles(event.clientX, event.clientY);
+      } else {
+        spawnUndoParticles(window.innerWidth / 2, window.innerHeight * 0.3);
+      }
+
+      playSynthUndo();
+      alertInApp("1つ前の操作をもどしたよ！");
+    }
+
+    // 警告モーダルを閉じる
     function closeWarningModal() {
       document.getElementById("warningModal").classList.add("hidden");
     }
 
+
+    /* ==========================================
+       6. 履歴リストレンダリング
+       ========================================== */
     function renderHistory() {
       const listEl = document.getElementById("historyList");
       listEl.innerHTML = "";
@@ -644,6 +818,7 @@
       });
     }
 
+    // 設定モーダルの制御
     function openRoomModal() {
       document.getElementById("roomModal").classList.remove("hidden");
       playSynthSwitch();
@@ -652,18 +827,22 @@
       document.getElementById("roomModal").classList.add("hidden");
     }
 
+    // 音の有効/無効切り替え
     function toggleSound() {
       window.appState.soundEnabled = !window.appState.soundEnabled;
       const icon = document.getElementById("soundIcon");
       if (window.appState.soundEnabled) {
-        icon.className = "fa-solid fa-volume-high text-amber-500";
+        icon.className = "fa-solid fa-volume-high text-xs text-amber-500";
         playSynthSuccess();
       } else {
-        icon.className = "fa-solid fa-volume-xmark text-slate-400";
+        icon.className = "fa-solid fa-volume-xmark text-xs text-slate-400";
       }
     }
 
-    // ================= 音声エンジン =================
+
+    /* ==========================================
+       7. 音声生成エンジン (Web Audio API によるオンデマンド合成)
+       ========================================== */
     let audioCtx = null;
 
     function getAudioContext() {
@@ -676,6 +855,7 @@
       return audioCtx;
     }
 
+    // 各ポイントごとのサウンドディスパッチ
     function playAddSound(amount) {
       if (!window.appState.soundEnabled) return;
       try {
@@ -685,6 +865,7 @@
       } catch (e) {}
     }
 
+    // 1ポイント：ピキーン
     function playSynth1P() {
       const ctx = getAudioContext();
       const osc = ctx.createOscillator();
@@ -700,6 +881,7 @@
       osc.stop(ctx.currentTime + 0.1);
     }
 
+    // 5ポイント：ピコピコ！
     function playSynth5P() {
       const ctx = getAudioContext();
       const now = ctx.currentTime;
@@ -719,6 +901,7 @@
       playTone(700, now + 0.08, 0.12);
     }
 
+    // 10ポイント：チャララーン！
     function playSynth10P() {
       const ctx = getAudioContext();
       const now = ctx.currentTime;
@@ -740,6 +923,7 @@
       playTone(1046, now + 0.18, 0.25);
     }
 
+    // ポイントを「つかう」：シュポン！
     function playSynthSpend() {
       if (!window.appState.soundEnabled) return;
       try {
@@ -758,6 +942,7 @@
       } catch (e) {}
     }
 
+    // 1こ「もどす」：ぷぽっ
     function playSynthUndo() {
       if (!window.appState.soundEnabled) return;
       try {
@@ -776,6 +961,7 @@
       } catch (e) {}
     }
 
+    // タブ等の切り替え音：ちっ
     function playSynthSwitch() {
       if (!window.appState.soundEnabled) return;
       try {
@@ -793,6 +979,7 @@
       } catch (e) {}
     }
 
+    // エラー（ポイント不足）：ぶぶー
     function playSynthError() {
       if (!window.appState.soundEnabled) return;
       try {
@@ -810,6 +997,7 @@
       } catch (e) {}
     }
 
+    // 成功時
     function playSynthSuccess() {
       if (!window.appState.soundEnabled) return;
       try {
@@ -827,7 +1015,10 @@
       } catch (e) {}
     }
 
-    // ================= パーティクル =================
+
+    /* ==========================================
+       8. 特大キラキラ！パーティクルエフェクト (2D Canvas)
+       ========================================== */
     const canvas = document.getElementById("particleCanvas");
     const ctx = canvas.getContext("2d");
     let particles = [];
@@ -847,24 +1038,27 @@
       constructor(x, y, mode = 'add') {
         this.x = x;
         this.y = y;
-        this.size = Math.random() * 10 + 5;
+        this.size = Math.random() * 12 + 6;
         const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 5 + 2.5;
+        const speed = Math.random() * 5 + 3;
         this.vx = Math.cos(angle) * speed;
-        this.vy = Math.sin(angle) * speed - 1.2;
+        this.vy = Math.sin(angle) * speed - 1.5;
         this.alpha = 1;
         this.decay = Math.random() * 0.025 + 0.02;
-        this.gravity = 0.1;
+        this.gravity = 0.12;
         this.rotation = Math.random() * 360;
-        this.rotationSpeed = Math.random() * 4 - 2;
+        this.rotationSpeed = Math.random() * 6 - 3;
         
         if (mode === 'add') {
+          // 加算時はパステル＆キラキラカラー
           this.color = ['#FFC0CB', '#FFD700', '#00FA9A', '#00BFFF', '#FF69B4', '#FF8C00'][Math.floor(Math.random() * 6)];
           this.shape = Math.random() > 0.4 ? 'star' : 'circle';
         } else if (mode === 'undo') {
+          // もどす時は控えめなグレー・シルバー
           this.color = '#94a3b8';
           this.shape = 'star';
         } else {
+          // 消費時はワクワクするバルーンカラー
           this.color = ['#FF4500', '#FF1493', '#DA70D6', '#FF6347'][Math.floor(Math.random() * 4)];
           this.shape = 'circle';
         }
@@ -886,6 +1080,7 @@
         ctx.fillStyle = this.color;
 
         if (this.shape === 'star') {
+          // 可愛い5角星の描画
           ctx.beginPath();
           for (let i = 0; i < 5; i++) {
             ctx.lineTo(Math.cos(((18 + i * 72) * Math.PI) / 180) * this.size,
@@ -896,6 +1091,7 @@
           ctx.closePath();
           ctx.fill();
         } else {
+          // 丸型パーティクル
           ctx.beginPath();
           ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2);
           ctx.fill();
@@ -904,24 +1100,26 @@
       }
     }
 
+    // パーティクルの射出
     function spawnParticles(x, y) {
-      for (let i = 0; i < 18; i++) {
+      for (let i = 0; i < 20; i++) {
         particles.push(new Particle(x, y, 'add'));
       }
     }
 
     function spawnSpendParticles(x, y) {
-      for (let i = 0; i < 18; i++) {
+      for (let i = 0; i < 22; i++) {
         particles.push(new Particle(x, y, 'spend'));
       }
     }
 
     function spawnUndoParticles(x, y) {
-      for (let i = 0; i < 12; i++) {
+      for (let i = 0; i < 15; i++) {
         particles.push(new Particle(x, y, 'undo'));
       }
     }
 
+    // パーティクルアニメーション描画ループ
     function particleLoop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       for (let i = particles.length - 1; i >= 0; i--) {
